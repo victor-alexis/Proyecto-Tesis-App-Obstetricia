@@ -1,0 +1,16 @@
+# Dependencias
+node_modules/
+package-lock.json
+
+# Variables de entorno y secretos (NUNCA SUBIR A GIT)
+.env
+.env.*
+!.env.example
+
+# Builds y temporales
+dist/
+build/
+.expo/
+*.log
+.DS_Store
+
