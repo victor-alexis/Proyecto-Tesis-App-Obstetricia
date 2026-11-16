@@ -1,3 +1,5 @@
+// Pantalla de Login inicial (Google OAuth)
+
 import React, { useState } from 'react';
 import {
   StyleSheet,

@@ -1,3 +1,5 @@
+// Layout principal de la App Móvil (Verifica si existe sesion)
+
 import React, { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';

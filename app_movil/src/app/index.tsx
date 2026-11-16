@@ -1,3 +1,5 @@
+// Pantalla principal (Home) de la App Móvil
+
 import React from 'react';
 import {
   StyleSheet,

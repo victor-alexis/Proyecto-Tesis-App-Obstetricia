@@ -1,3 +1,5 @@
+// Pantalla de Exploración (RAG - Retrieval-Augmented Generation) para consultas clínicas
+
 import React, { useState } from 'react';
 import {
   StyleSheet,
