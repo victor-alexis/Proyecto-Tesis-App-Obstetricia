@@ -19,7 +19,24 @@
       "dest": "backend/src/index.js"
     },
     {
-      "handle": "filesystem"
+      "src": "/_expo/(.*)",
+      "dest": "app_movil/_expo/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "app_movil/assets/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "app_movil/favicon.ico"
+    },
+    {
+      "src": "/login",
+      "dest": "app_movil/login.html"
+    },
+    {
+      "src": "/explore",
+      "dest": "app_movil/explore.html"
     },
     {
       "src": "/(.*)",
