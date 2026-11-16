@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
+import { ShineBorder } from '../components/ui';
 
 export default function LoginScreen() {
   const { signInWithGoogle, session, loading: authLoading } = useAuth();
@@ -54,41 +55,49 @@ export default function LoginScreen() {
           </Text>
         </View>
 
-        {/* Tarjeta de Inicio de Sesión */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Bienvenido/a</Text>
-          <Text style={styles.cardDescription}>
-            Para acceder a las herramientas perinatales y módulos clínicos, inicia sesión con tu cuenta de Google.
-          </Text>
+        {/* Tarjeta de Inicio de Sesión con Borde Animado */}
+        <ShineBorder
+          borderRadius={20}
+          borderWidth={2}
+          duration={8}
+          colors={['#2B6CB0', '#63B3ED', '#EBF8FF', '#2B6CB0']}
+          style={styles.shineWrapper}
+        >
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Bienvenido/a</Text>
+            <Text style={styles.cardDescription}>
+              Para acceder a las herramientas perinatales y módulos clínicos, inicia sesión con tu cuenta de Google.
+            </Text>
 
-          {errorMessage && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            </View>
-          )}
-
-          <TouchableOpacity
-            style={[styles.googleButton, (loading || authLoading) && styles.buttonDisabled]}
-            onPress={handleGoogleLogin}
-            disabled={loading || authLoading}
-            activeOpacity={0.8}
-          >
-            {loading || authLoading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <View style={styles.buttonContent}>
-                <Text style={styles.googleIconText}>G</Text>
-                <Text style={styles.googleButtonText}>Continuar con Google</Text>
+            {errorMessage && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
             )}
-          </TouchableOpacity>
 
-          <View style={styles.infoBadge}>
-            <Text style={styles.infoBadgeText}>
-              ✓ Admite cuentas <Text style={styles.boldText}>institucionales</Text> (.edu, .cl) y <Text style={styles.boldText}>personales</Text> (@gmail.com)
-            </Text>
+            <TouchableOpacity
+              style={[styles.googleButton, (loading || authLoading) && styles.buttonDisabled]}
+              onPress={handleGoogleLogin}
+              disabled={loading || authLoading}
+              activeOpacity={0.8}
+            >
+              {loading || authLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <View style={styles.buttonContent}>
+                  <Text style={styles.googleIconText}>G</Text>
+                  <Text style={styles.googleButtonText}>Continuar con Google</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.infoBadge}>
+              <Text style={styles.infoBadgeText}>
+                ✓ Admite cuentas <Text style={styles.boldText}>institucionales</Text> (.edu, .cl) y <Text style={styles.boldText}>personales</Text> (@gmail.com)
+              </Text>
+            </View>
           </View>
-        </View>
+        </ShineBorder>
 
         {/* Pie de página ético y de privacidad clínica */}
         <View style={styles.footer}>
@@ -151,17 +160,16 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     lineHeight: 20,
   },
+  shineWrapper: {
+    shadowColor: '#2B6CB0',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
+  },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
     padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#EDF2F7',
   },
   cardTitle: {
     fontSize: 20,

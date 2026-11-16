@@ -1,7 +1,7 @@
 # Fases del Proyecto de Tesis: App Obstetricia
 
-> **Estado General:** `Fase Activa: Conexión Cloud (Vercel + Supabase) & Autenticación Google (Login Inicial)`  
-> **Última actualización:** 2026-11-11  
+> **Estado General:** `Fase 2 Completada con éxito (Cloud + Auth) -> Iniciando Fase 3: Persistencia, Modelado Clínico y Privacidad`  
+> **Última actualización:** 2026-11-15  
 > **Autores:** Equipo de Tesis (Víctor Alexis & Compañero)
 
 ---
@@ -26,22 +26,23 @@
 
 ---
 
-## Fase 2: Infraestructura Cloud, Despliegue y Autenticación con Google (¡PRIORIDAD ACTUAL!)
+## Fase 2: Infraestructura Cloud, Despliegue y Autenticación con Google (¡COMPLETADA!)
 *Objetivo: Establecer la conexión cloud (Vercel + Supabase) y crear el Login como primera pantalla de acceso a la aplicación.*
 
-- [>] **Paso 2.1: Conexión y Despliegue en Vercel:**
-  - Configuración del proyecto en Vercel para despliegue continuo de endpoints y APIs.
-  - Sincronización de variables de entorno de producción.
-- [>] **Paso 2.2: Conexión con Supabase y Configuración de Proveedor Google:**
+- [x] **Paso 2.1: Conexión y Despliegue en Vercel:**
+  - Configuración del proyecto en Vercel para despliegue continuo monorepo (App Web Expo + Backend Express en un solo dominio).
+  - Configuración de `vercel.json` con enrutamiento de bundles estáticos `_expo`, assets y fallback SPA.
+  - Sincronización de variables de entorno de producción (`SUPABASE_*` y `EXPO_PUBLIC_*`).
+- [x] **Paso 2.2: Conexión con Supabase y Configuración de Proveedor Google:**
   - Configuración del proyecto en Supabase (URL y claves de API).
-  - Habilitación del proveedor Google OAuth en Supabase Auth.
+  - Habilitación del proveedor Google OAuth en Supabase Auth y Google Cloud Console.
   - Soporte dual de inicio de sesión:
     - Cuentas de correo institucionales (docentes / estudiantes de salud).
     - Cuentas de correo personales (`@gmail.com` para pacientes y usuarios externos).
 - [x] **Paso 2.3: Pantalla y Flujo de Login como Primera Instancia en App Móvil:**
   - Implementación de pantalla inicial de Login (`app_movil/src/app/login.tsx`) con Google OAuth.
   - Protección de rutas con `Expo Router` (redirección obligatoria al Login en `_layout.tsx` si no hay sesión).
-  - Persistencia de sesión con `@react-native-async-storage/async-storage` en `AuthContext.tsx`.
+  - Persistencia de sesión y compatibilidad SSR (`ssrSafeStorage` en `services/supabase.ts`).
 - [x] **Paso 2.4: Protección de Endpoints en Backend:**
   - Implementación de middleware `requireAuth` en `backend/src/shared/middleware/authMiddleware.js`.
   - Montaje de rutas protegidas en `backend/src/index.js` (`/api/cases` y `/api/rag`).
