@@ -17,7 +17,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
+
+const { width: SCREEN_W } = Dimensions.get('window');
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Mail,
@@ -101,14 +104,36 @@ export const LoginScreen: React.FC = () => {
     <View style={[styles.outerContainer, { backgroundColor: c.bgCanvas }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
-      {/* Gradiente ambiental de fondo */}
+      {/* ── Capa 1: Fondo base clínico níveo ──────────────────────────── */}
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: isDarkMode ? '#08090D' : '#F8FAFD' },
+        ]}
+      />
+
+      {/* ── Capa 2: Aurora superior izquierda (Rose Quartz / Warm Peach) ── */}
       <LinearGradient
         colors={
           isDarkMode
-            ? ['#0a0b10', '#13111c', '#08090d']
-            : ['#f8f9fe', '#f2f5fd', '#e9effc']
+            ? ['rgba(236,72,153,0.22)', 'rgba(13,9,20,0)']
+            : ['rgba(244,182,193,0.38)', 'rgba(255,255,255,0)']
         }
-        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.8, y: 0.8 }}
+        style={[styles.orb, styles.orbTopLeft]}
+      />
+
+      {/* ── Capa 3: Aurora superior derecha (Soft Periwinkle / Sky Blue) ── */}
+      <LinearGradient
+        colors={
+          isDarkMode
+            ? ['rgba(99,102,241,0.18)', 'rgba(13,9,20,0)']
+            : ['rgba(199,210,254,0.42)', 'rgba(255,255,255,0)']
+        }
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0.2, y: 0.8 }}
+        style={[styles.orb, styles.orbTopRight]}
       />
 
       <SafeAreaView style={styles.safeArea}>
@@ -348,7 +373,7 @@ export default LoginScreen;
 
 // ─── Paletas de color ─────────────────────────────────────────────────────────
 const LIGHT = {
-  bgCanvas: '#F3F7FC',
+  bgCanvas: '#F8FAFD',      // ← Lienzo níveo clínico (aurora system lo sobreescribe)
   cardBg: '#FFFFFF',
   cardBorder: '#D8E4F2',
   textTitle: '#0F1D38',
@@ -365,7 +390,7 @@ const LIGHT = {
 };
 
 const DARK = {
-  bgCanvas: '#130F1A',
+  bgCanvas: '#08090D',      // ← Obsidiana mate antirreflejo
   cardBg: '#1C1527',
   cardBorder: '#3A2449',
   textTitle: '#FDF2F8',
@@ -385,6 +410,24 @@ const DARK = {
 const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
+  },
+
+  // ── Orbes de aurora ambiental ────────────────────────────────────────────
+  orb: {
+    position: 'absolute',
+    borderRadius: 200,
+  },
+  orbTopLeft: {
+    top: -60,
+    left: -70,
+    width: SCREEN_W * 0.75,
+    height: SCREEN_W * 0.75,
+  },
+  orbTopRight: {
+    top: -40,
+    right: -60,
+    width: SCREEN_W * 0.70,
+    height: SCREEN_W * 0.70,
   },
   safeArea: {
     flex: 1,
@@ -463,10 +506,11 @@ const styles = StyleSheet.create({
   cardWrapper: {
     marginVertical: 4,
     borderRadius: 26,
-    shadowColor: '#60A5FA',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 24,
+    // Halo primario: azul institucional suave (luz de elevación flotante)
+    shadowColor: '#0D5C91',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.14,
+    shadowRadius: 32,
     elevation: 6,
   },
   cardGradientBorder: {
