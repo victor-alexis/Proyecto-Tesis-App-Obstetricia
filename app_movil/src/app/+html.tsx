@@ -25,19 +25,13 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* Estilos y animaciones exactas de Stitch */}
         <style dangerouslySetInnerHTML={{ __html: `
-          :root {
-            --shine-c1: #38bdf8;
-            --shine-c2: #818cf8;
-            --shine-c3: #34d399;
-            --wave-gradient: linear-gradient(
-              120deg,
-              #00446e 0%,
-              #2563eb 20%,
-              #7c3aed 40%,
-              #ec4899 60%,
-              #0284c7 80%,
-              #00446e 100%
-            );
+          html, body, #root {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #F3F7FC;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
           }
 
           @keyframes gradient-wave-flow {
@@ -151,18 +145,8 @@ export default function Root({ children }: PropsWithChildren) {
             50% { opacity: 1; transform: scale(1.15) rotate(180deg); }
           }
 
-          .stitch-sparkle {
+          .sparkle-icon {
             animation: sparkle-twinkle 3s ease-in-out infinite;
-          }
-
-          body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
           }
         `}} />
       </head>
