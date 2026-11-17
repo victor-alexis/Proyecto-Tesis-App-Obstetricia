@@ -1,7 +1,8 @@
 /**
  * LoginScreen — ClinicalCase
- * Réplica idéntica y pixel-perfect del diseño Google Stitch (HTML + Design Tokens)
- * Totalmente funcional con Supabase Auth (Google OAuth + Email/Password)
+ * Réplica idéntica y pixel-perfect del diseño de Google Stitch.
+ * Implementa fuentes oficiales Plus Jakarta Sans y Playfair Display,
+ * orbes bioluminiscentes idénticos, borde luminiscente Shine Border y animación de título.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -37,29 +38,29 @@ import {
 import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 
-// ─── Logotipo oficial de Google en SVG ─────────────────────────────────────────
+// ─── Ícono Oficial de Google en SVG ───────────────────────────────────────────
 const GoogleIcon: React.FC<{ size?: number }> = ({ size = 15 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
     <Path
       fill="#4285F4"
-      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
     />
     <Path
       fill="#34A853"
-      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
     />
     <Path
       fill="#FBBC05"
-      d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
     />
     <Path
       fill="#EA4335"
-      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
     />
   </Svg>
 );
 
-// ─── Ícono de Candado de Seguridad Footer ───────────────────────────────────────
+// ─── Ícono Candado Footer ─────────────────────────────────────────────────────
 const SecurityLockIcon: React.FC = () => (
   <Svg width={13} height={13} viewBox="0 0 20 20" fill="#FDE047">
     <Path
@@ -70,7 +71,6 @@ const SecurityLockIcon: React.FC = () => (
   </Svg>
 );
 
-// ─── Componente Principal ──────────────────────────────────────────────────────
 export const LoginScreen: React.FC = () => {
   const { signInWithGoogle, signInWithPassword, session, loading: authLoading } = useAuth();
 
@@ -81,7 +81,6 @@ export const LoginScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Redirección si ya hay sesión activa
   useEffect(() => {
     if (session) {
       router.replace('/');
@@ -119,16 +118,14 @@ export const LoginScreen: React.FC = () => {
     <View style={[styles.outerContainer, { backgroundColor: c.bgCanvas }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
-      {/* ── Orbes de Luz Ambiental (Warm Velvet Orbs del Stitch HTML) ── */}
+      {/* ── Orbes Bioluminiscentes de Fondo (Warm Velvet Glow Orbs) ── */}
       <View
         pointerEvents="none"
         style={[
           styles.ambientOrb,
           styles.orbTopLeft,
           {
-            backgroundColor: isDarkMode
-              ? 'rgba(190, 24, 93, 0.20)'
-              : 'rgba(190, 24, 93, 0.12)',
+            backgroundColor: isDarkMode ? 'rgba(190, 24, 93, 0.20)' : 'rgba(190, 24, 93, 0.15)',
           },
         ]}
       />
@@ -138,9 +135,7 @@ export const LoginScreen: React.FC = () => {
           styles.ambientOrb,
           styles.orbMiddleRight,
           {
-            backgroundColor: isDarkMode
-              ? 'rgba(124, 58, 237, 0.20)'
-              : 'rgba(124, 58, 237, 0.12)',
+            backgroundColor: isDarkMode ? 'rgba(124, 58, 237, 0.20)' : 'rgba(124, 58, 237, 0.15)',
           },
         ]}
       />
@@ -150,9 +145,7 @@ export const LoginScreen: React.FC = () => {
           styles.ambientOrb,
           styles.orbBottomCenter,
           {
-            backgroundColor: isDarkMode
-              ? 'rgba(251, 113, 133, 0.15)'
-              : 'rgba(251, 113, 133, 0.10)',
+            backgroundColor: isDarkMode ? 'rgba(251, 113, 133, 0.15)' : 'rgba(251, 113, 133, 0.10)',
           },
         ]}
       />
@@ -162,295 +155,316 @@ export const LoginScreen: React.FC = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardContainer}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* ── Botón Conmutador de Tema (Top Right) ── */}
-            <View style={styles.topBar}>
-              <TouchableOpacity
-                onPress={() => setIsDarkMode(!isDarkMode)}
-                activeOpacity={0.8}
-                style={[
-                  styles.themeToggleBtn,
-                  {
-                    backgroundColor: c.btnToggleBg,
-                    borderColor: c.btnToggleBorder,
-                  },
-                ]}
-              >
-                {isDarkMode ? (
-                  <Sun size={17} color="#FDE047" />
-                ) : (
-                  <Moon size={17} color="#2563EB" />
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {/* ── Cabecera / Branding (ClinicalCase + Sparkles) ── */}
-            <View style={styles.header}>
-              <View style={styles.brandTitleWrapper}>
-                {/* Sparkle Superior Derecho */}
-                <Text style={styles.sparkleTopRight}>✦</Text>
-                {/* Sparkle Inferior Izquierdo */}
-                <Text style={styles.sparkleBottomLeft}>✦</Text>
-
-                {/* Título "ClinicalCase" con Gradiente Wave Multicapa en SVG */}
-                <Svg height={44} width={260} viewBox="0 0 260 44">
-                  <Defs>
-                    <SvgLinearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <Stop offset="0%" stopColor={isDarkMode ? '#FDA4AF' : '#00446e'} />
-                      <Stop offset="22%" stopColor={isDarkMode ? '#FFFFFF' : '#2563eb'} />
-                      <Stop offset="50%" stopColor={isDarkMode ? '#E879F9' : '#7c3aed'} />
-                      <Stop offset="78%" stopColor={isDarkMode ? '#FDE047' : '#ec4899'} />
-                      <Stop offset="100%" stopColor={isDarkMode ? '#FDA4AF' : '#0284c7'} />
-                    </SvgLinearGradient>
-                  </Defs>
-                  <SvgText
-                    fill="url(#waveGradient)"
-                    fontSize={34}
-                    fontFamily={Platform.OS === 'ios' ? 'Playfair Display' : 'serif'}
-                    fontStyle="italic"
-                    fontWeight="800"
-                    letterSpacing="-0.5"
-                    x="130"
-                    y="33"
-                    textAnchor="middle"
-                  >
-                    ClinicalCase
-                  </SvgText>
-                </Svg>
+          {/* Contenedor Mockup de Teléfono (390px centrado) */}
+          <View style={styles.phoneFrameContainer}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {/* ── Botón Conmutador de Tema (Top Right) ── */}
+              <View style={styles.topBar}>
+                <TouchableOpacity
+                  onPress={() => setIsDarkMode(!isDarkMode)}
+                  activeOpacity={0.8}
+                  style={[
+                    styles.themeToggleBtn,
+                    {
+                      backgroundColor: c.btnToggleBg,
+                      borderColor: c.btnToggleBorder,
+                    },
+                  ]}
+                >
+                  {isDarkMode ? (
+                    <Sun size={16} color="#FDE047" />
+                  ) : (
+                    <Moon size={16} color="#2563EB" />
+                  )}
+                </TouchableOpacity>
               </View>
 
-              {/* Subtítulo Clínico */}
-              <Text style={[styles.subtitle, { color: c.textSub }]}>
-                Sistema de Soporte a la Decisión Clínica y Seguimiento Perinatal
-              </Text>
-            </View>
-
-            {/* ── Tarjeta Modal con Shine Border Perimetral ── */}
-            <View
-              style={[
-                styles.shineCardContainer,
-                {
-                  shadowColor: isDarkMode ? '#BE185D' : '#60A5FA',
-                },
-              ]}
-            >
-              {/* Borde gradiente luminiscente de 1.5px */}
-              <LinearGradient
-                colors={c.shineColors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.shineBorderGradient}
-              >
-                <View style={[styles.cardInner, { backgroundColor: c.cardBg }]}>
-                  {/* Título de la tarjeta */}
-                  <Text style={[styles.cardTitle, { color: c.textTitle }]}>
-                    Bienvenido/a
+              {/* ── Cabecera de Marca (ClinicalCase + Sparkles) ── */}
+              <View style={styles.header}>
+                <View style={styles.brandTitleWrapper}>
+                  {/* Sparkle Superior Derecho */}
+                  <Text style={[styles.sparkleTopRight, Platform.OS === 'web' && ({ className: 'sparkle-icon' } as any)]}>
+                    ✦
+                  </Text>
+                  {/* Sparkle Inferior Izquierdo */}
+                  <Text style={[styles.sparkleBottomLeft, Platform.OS === 'web' && ({ className: 'sparkle-icon' } as any)]}>
+                    ✦
                   </Text>
 
-                  {/* Subtítulo explicativo */}
-                  <Text style={[styles.cardDescription, { color: c.textSub }]}>
-                    Para acceder a las herramientas perinatales y módulos clínicos, inicia sesión con tu cuenta.
-                  </Text>
-
-                  {/* Mensaje de Error si aplica */}
-                  {errorMessage && (
-                    <View style={styles.errorBox}>
-                      <Text style={styles.errorText}>⚠ {errorMessage}</Text>
-                    </View>
+                  {/* Renderizado Web con CSS animado o SVG en Nativo */}
+                  {Platform.OS === 'web' ? (
+                    <Text
+                      style={[
+                        styles.brandTitleText,
+                        {
+                          fontFamily: 'PlayfairDisplay-ExtraBoldItalic',
+                        },
+                      ]}
+                      // @ts-ignore
+                      className={isDarkMode ? 'stitch-wave-text-dark' : 'stitch-wave-text'}
+                    >
+                      ClinicalCase
+                    </Text>
+                  ) : (
+                    <Svg height={46} width={260} viewBox="0 0 260 46">
+                      <Defs>
+                        <SvgLinearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <Stop offset="0%" stopColor={isDarkMode ? '#FDA4AF' : '#00446e'} />
+                          <Stop offset="22%" stopColor={isDarkMode ? '#FFFFFF' : '#2563eb'} />
+                          <Stop offset="50%" stopColor={isDarkMode ? '#E879F9' : '#7c3aed'} />
+                          <Stop offset="78%" stopColor={isDarkMode ? '#FDE047' : '#ec4899'} />
+                          <Stop offset="100%" stopColor={isDarkMode ? '#FDA4AF' : '#0284c7'} />
+                        </SvgLinearGradient>
+                      </Defs>
+                      <SvgText
+                        fill="url(#waveGradient)"
+                        fontSize={34}
+                        fontFamily="PlayfairDisplay-ExtraBoldItalic"
+                        fontStyle="italic"
+                        fontWeight="800"
+                        letterSpacing="-0.5"
+                        x="130"
+                        y="34"
+                        textAnchor="middle"
+                      >
+                        ClinicalCase
+                      </SvgText>
+                    </Svg>
                   )}
+                </View>
 
-                  {/* Botón: Continuar con Google */}
-                  <TouchableOpacity
-                    style={[
-                      styles.googleButton,
-                      {
-                        backgroundColor: c.btnGoogle,
-                        borderColor: c.btnGoogleBorder,
-                      },
-                      isLoading && styles.disabled,
-                    ]}
-                    onPress={handleGoogleLogin}
-                    disabled={isLoading}
-                    activeOpacity={0.9}
-                  >
-                    <View style={styles.googleIconBadge}>
-                      <GoogleIcon size={14} />
+                {/* Subtítulo Clínico */}
+                <Text style={[styles.subtitle, { color: c.textSub }]}>
+                  Sistema de Soporte a la Decisión Clínica y Seguimiento Perinatal
+                </Text>
+              </View>
+
+              {/* ── Tarjeta de Inicio de Sesión con Shine Border ── */}
+              <View
+                style={[
+                  styles.shineCardContainer,
+                  Platform.OS === 'web' && ({
+                    className: isDarkMode ? 'stitch-shine-border stitch-shine-border-dark' : 'stitch-shine-border',
+                  } as any),
+                ]}
+              >
+                <LinearGradient
+                  colors={c.shineColors}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.shineBorderGradient}
+                >
+                  <View style={[styles.cardInner, { backgroundColor: c.cardBg }]}>
+                    {/* Título de la tarjeta */}
+                    <Text style={[styles.cardTitle, { color: c.textTitle }]}>
+                      Bienvenido/a
+                    </Text>
+
+                    {/* Subtítulo explicativo */}
+                    <Text style={[styles.cardDescription, { color: c.textSub }]}>
+                      Para acceder a las herramientas perinatales y módulos clínicos, inicia sesión con tu cuenta.
+                    </Text>
+
+                    {/* Mensaje de Error */}
+                    {errorMessage && (
+                      <View style={styles.errorBox}>
+                        <Text style={styles.errorText}>⚠ {errorMessage}</Text>
+                      </View>
+                    )}
+
+                    {/* Botón: Continuar con Google */}
+                    <TouchableOpacity
+                      style={[
+                        styles.googleButton,
+                        {
+                          backgroundColor: c.btnGoogle,
+                          borderColor: c.btnGoogleBorder,
+                        },
+                        isLoading && styles.disabled,
+                      ]}
+                      onPress={handleGoogleLogin}
+                      disabled={isLoading}
+                      activeOpacity={0.9}
+                    >
+                      <View style={styles.googleIconBadge}>
+                        <GoogleIcon size={14} />
+                      </View>
+                      <Text style={[styles.googleButtonText, { color: c.btnGoogleText }]}>
+                        Continuar con Google
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Separador */}
+                    <View style={styles.dividerRow}>
+                      <View style={[styles.dividerLine, { backgroundColor: c.dividerColor }]} />
+                      <Text style={[styles.dividerText, { color: c.inputPlaceholder }]}>
+                        O INGRESA CON TU CORREO
+                      </Text>
+                      <View style={[styles.dividerLine, { backgroundColor: c.dividerColor }]} />
                     </View>
-                    <Text style={[styles.googleButtonText, { color: c.btnGoogleText }]}>
-                      Continuar con Google
-                    </Text>
-                  </TouchableOpacity>
 
-                  {/* Separador "O INGRESA CON TU CORREO" */}
-                  <View style={styles.dividerRow}>
-                    <View style={[styles.dividerLine, { backgroundColor: c.dividerColor }]} />
-                    <Text style={[styles.dividerText, { color: c.inputPlaceholder }]}>
-                      O INGRESA CON TU CORREO
-                    </Text>
-                    <View style={[styles.dividerLine, { backgroundColor: c.dividerColor }]} />
-                  </View>
+                    {/* Campo: Correo Institucional / Personal */}
+                    <View style={styles.fieldGroup}>
+                      <Text style={[styles.fieldLabel, { color: c.labelColor }]}>
+                        Correo institucional / personal
+                      </Text>
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          {
+                            backgroundColor: c.inputBg,
+                            borderColor: c.inputBorder,
+                          },
+                        ]}
+                      >
+                        <Mail size={16} color="#64748B" style={styles.inputLeftIcon} />
+                        <TextInput
+                          style={[styles.textInputField, { color: c.inputText }]}
+                          placeholder="usuario@gmail.com"
+                          placeholderTextColor={c.inputPlaceholder}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          value={email}
+                          onChangeText={setEmail}
+                        />
+                      </View>
+                    </View>
 
-                  {/* Campo: Correo Institucional / Personal */}
-                  <View style={styles.fieldGroup}>
-                    <Text style={[styles.fieldLabel, { color: c.labelColor }]}>
-                      Correo institucional / personal
-                    </Text>
+                    {/* Campo: Contraseña */}
+                    <View style={styles.fieldGroup}>
+                      <View style={styles.passwordLabelRow}>
+                        <Text style={[styles.fieldLabel, { color: c.labelColor }]}>
+                          Contraseña
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => router.push('/forgot-password' as any)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.forgotPasswordLink, { color: c.accentBlue }]}>
+                            ¿Olvidaste tu contraseña?
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          {
+                            backgroundColor: c.inputBg,
+                            borderColor: c.inputBorder,
+                          },
+                        ]}
+                      >
+                        <Lock size={16} color="#64748B" style={styles.inputLeftIcon} />
+                        <TextInput
+                          style={[styles.textInputField, { color: c.inputText, paddingRight: 36 }]}
+                          placeholder="••••••••"
+                          placeholderTextColor={c.inputPlaceholder}
+                          secureTextEntry={!showPassword}
+                          value={password}
+                          onChangeText={setPassword}
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowPassword(!showPassword)}
+                          style={styles.eyeToggleButton}
+                          activeOpacity={0.7}
+                        >
+                          {showPassword ? (
+                            <EyeOff size={16} color={c.inputPlaceholder} />
+                          ) : (
+                            <Eye size={16} color={c.inputPlaceholder} />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Botón: Iniciar Sesión → */}
+                    <TouchableOpacity
+                      style={[styles.submitButtonTouch, isLoading && styles.disabled]}
+                      onPress={handleEmailLogin}
+                      disabled={isLoading}
+                      activeOpacity={0.9}
+                    >
+                      <LinearGradient
+                        colors={c.primaryBtnGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.submitBtnGradient}
+                      >
+                        {isLoading ? (
+                          <ActivityIndicator color="#FFFFFF" size="small" />
+                        ) : (
+                          <View style={styles.submitRow}>
+                            <Text style={styles.submitBtnText}>Iniciar Sesión</Text>
+                            <Text style={styles.submitBtnArrow}>→</Text>
+                          </View>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    {/* Badge Verde: Admite cuentas institucionales y personales */}
                     <View
                       style={[
-                        styles.inputContainer,
+                        styles.supportedAccountsBadge,
                         {
-                          backgroundColor: c.inputBg,
-                          borderColor: c.inputBorder,
+                          backgroundColor: c.badgeBg,
+                          borderColor: c.badgeBorder,
                         },
                       ]}
                     >
-                      <Mail size={16} color="#64748B" style={styles.inputLeftIcon} />
-                      <TextInput
-                        style={[styles.textInputField, { color: c.inputText }]}
-                        placeholder="usuario@gmail.com"
-                        placeholderTextColor={c.inputPlaceholder}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        value={email}
-                        onChangeText={setEmail}
-                      />
+                      <Text style={[styles.badgeCheckmark, { color: c.badgeText }]}>✓</Text>
+                      <Text style={[styles.badgeText, { color: c.badgeText }]}>
+                        Admite cuentas{' '}
+                        <Text style={[styles.badgeBold, { color: c.badgeText }]}>
+                          institucionales
+                        </Text>{' '}
+                        y{' '}
+                        <Text style={[styles.badgeBold, { color: c.badgeText }]}>
+                          personales
+                        </Text>
+                      </Text>
                     </View>
-                  </View>
 
-                  {/* Campo: Contraseña */}
-                  <View style={styles.fieldGroup}>
-                    <View style={styles.passwordLabelRow}>
-                      <Text style={[styles.fieldLabel, { color: c.labelColor }]}>
-                        Contraseña
+                    {/* Enlace: Crear una Cuenta */}
+                    <View style={styles.registerPromptRow}>
+                      <Text style={[styles.registerPromptText, { color: c.textSub }]}>
+                        ¿No tienes una cuenta?{' '}
                       </Text>
                       <TouchableOpacity
-                        onPress={() => router.push('/forgot-password' as any)}
+                        onPress={() => router.push('/register' as any)}
                         activeOpacity={0.7}
+                        style={styles.registerLinkContainer}
                       >
-                        <Text style={[styles.forgotPasswordLink, { color: c.accentBlue }]}>
-                          ¿Olvidaste tu contraseña?
+                        <Text style={[styles.registerLinkText, { color: c.primaryBtnColor }]}>
+                          Crear una cuenta
+                        </Text>
+                        <Text style={[styles.registerLinkArrow, { color: c.primaryBtnColor }]}>
+                          →
                         </Text>
                       </TouchableOpacity>
                     </View>
-                    <View
-                      style={[
-                        styles.inputContainer,
-                        {
-                          backgroundColor: c.inputBg,
-                          borderColor: c.inputBorder,
-                        },
-                      ]}
-                    >
-                      <Lock size={16} color="#64748B" style={styles.inputLeftIcon} />
-                      <TextInput
-                        style={[styles.textInputField, { color: c.inputText, paddingRight: 36 }]}
-                        placeholder="••••••••"
-                        placeholderTextColor={c.inputPlaceholder}
-                        secureTextEntry={!showPassword}
-                        value={password}
-                        onChangeText={setPassword}
-                      />
-                      <TouchableOpacity
-                        onPress={() => setShowPassword(!showPassword)}
-                        style={styles.eyeToggleButton}
-                        activeOpacity={0.7}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={16} color={c.inputPlaceholder} />
-                        ) : (
-                          <Eye size={16} color={c.inputPlaceholder} />
-                        )}
-                      </TouchableOpacity>
-                    </View>
                   </View>
+                </LinearGradient>
+              </View>
 
-                  {/* Botón: Iniciar Sesión → */}
-                  <TouchableOpacity
-                    style={[isLoading && styles.disabled]}
-                    onPress={handleEmailLogin}
-                    disabled={isLoading}
-                    activeOpacity={0.9}
-                  >
-                    <LinearGradient
-                      colors={c.primaryBtnGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.submitBtnGradient}
-                    >
-                      {isLoading ? (
-                        <ActivityIndicator color="#FFFFFF" size="small" />
-                      ) : (
-                        <View style={styles.submitRow}>
-                          <Text style={styles.submitBtnText}>Iniciar Sesión</Text>
-                          <Text style={styles.submitBtnArrow}>→</Text>
-                        </View>
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  {/* Badge de Información de Cuentas */}
-                  <View
-                    style={[
-                      styles.supportedAccountsBadge,
-                      {
-                        backgroundColor: c.badgeBg,
-                        borderColor: c.badgeBorder,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.badgeCheckmark, { color: c.badgeText }]}>✓</Text>
-                    <Text style={[styles.badgeText, { color: c.badgeText }]}>
-                      Admite cuentas{' '}
-                      <Text style={[styles.badgeBold, { color: c.badgeText }]}>
-                        institucionales
-                      </Text>{' '}
-                      y{' '}
-                      <Text style={[styles.badgeBold, { color: c.badgeText }]}>
-                        personales
-                      </Text>
-                    </Text>
-                  </View>
-
-                  {/* Enlace: Crear una Cuenta */}
-                  <View style={styles.registerPromptRow}>
-                    <Text style={[styles.registerPromptText, { color: c.textSub }]}>
-                      ¿No tienes una cuenta?{' '}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => router.push('/register' as any)}
-                      activeOpacity={0.7}
-                      style={styles.registerLinkContainer}
-                    >
-                      <Text style={[styles.registerLinkText, { color: c.primaryBtnColor }]}>
-                        Crear una cuenta
-                      </Text>
-                      <Text style={[styles.registerLinkArrow, { color: c.primaryBtnColor }]}>
-                        →
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+              {/* ── Pie de Página (Seguridad y Créditos) ── */}
+              <View style={styles.footer}>
+                <View style={styles.securityNoticeRow}>
+                  <SecurityLockIcon />
+                  <Text style={[styles.securityNoticeText, { color: c.footerText }]}>
+                    Conexión clínica cifrada y segura
+                  </Text>
                 </View>
-              </LinearGradient>
-            </View>
-
-            {/* ── Pie de Página (Seguridad y Créditos) ── */}
-            <View style={styles.footer}>
-              <View style={styles.securityNoticeRow}>
-                <SecurityLockIcon />
-                <Text style={[styles.securityNoticeText, { color: c.footerText }]}>
-                  Conexión clínica cifrada y segura
+                <Text style={styles.creditsText}>
+                  Design by Victor Gonzalez & Benjamin Torres
                 </Text>
               </View>
-              <Text style={styles.creditsText}>
-                Design by Victor Gonzalez & Benjamin Torres
-              </Text>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
@@ -459,7 +473,7 @@ export const LoginScreen: React.FC = () => {
 
 export default LoginScreen;
 
-// ─── Paletas Oficiales del Design System (Light & Dark) ────────────────────────
+// ─── Paletas Oficiales de Stitch ──────────────────────────────────────────────
 const LIGHT = {
   bgCanvas: '#F3F7FC',
   cardBg: '#FFFFFF',
@@ -523,50 +537,60 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   keyboardContainer: {
     flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phoneFrameContainer: {
+    width: '100%',
+    maxWidth: 390,
+    minHeight: Platform.OS === 'web' ? 820 : undefined,
+    alignSelf: 'center',
+    justifyContent: 'space-between',
   },
   scrollContent: {
-    paddingHorizontal: 18,
-    paddingTop: 6,
+    paddingHorizontal: 20,
+    paddingTop: 10,
     paddingBottom: 20,
-    maxWidth: 400,
     width: '100%',
-    alignSelf: 'center',
     flexGrow: 1,
     justifyContent: 'space-between',
   },
 
-  // ── Luces Ambientales (Orbes) ──
+  // ── Orbes Bioluminiscentes ──
   ambientOrb: {
     position: 'absolute',
-    borderRadius: 200,
+    borderRadius: 9999,
   },
   orbTopLeft: {
-    top: -80,
-    left: -70,
-    width: 260,
-    height: 260,
+    top: -96,
+    left: -80,
+    width: 256,
+    height: 256,
   },
   orbMiddleRight: {
-    top: '28%',
-    right: -80,
-    width: 290,
-    height: 290,
+    top: '33%',
+    right: -96,
+    width: 288,
+    height: 288,
   },
   orbBottomCenter: {
-    bottom: -60,
-    left: '20%',
-    width: 250,
-    height: 250,
+    bottom: -80,
+    left: '25%',
+    width: 240,
+    height: 240,
   },
 
-  // ── Botón Top Right (Theme Toggle) ──
+  // ── Theme Toggle ──
   topBar: {
     alignItems: 'flex-end',
-    marginBottom: 2,
-    marginTop: Platform.OS === 'android' ? 28 : 2,
+    marginBottom: 4,
+    marginTop: Platform.OS === 'android' ? 24 : 4,
     zIndex: 30,
   },
   themeToggleBtn: {
@@ -583,51 +607,59 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  // ── Header / Branding ──
+  // ── Header Branding ──
   header: {
     alignItems: 'center',
-    textAlign: 'center',
     marginBottom: 12,
-    marginTop: 4,
+    marginTop: 8,
   },
   brandTitleWrapper: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 2,
+    marginVertical: 4,
   },
   sparkleTopRight: {
     position: 'absolute',
-    top: 2,
-    right: 8,
+    top: -4,
+    right: -12,
     fontSize: 12,
     color: '#FDE047',
     zIndex: 5,
   },
   sparkleBottomLeft: {
     position: 'absolute',
-    bottom: 4,
-    left: 8,
+    bottom: -2,
+    left: -12,
     fontSize: 10,
     color: '#FDA4AF',
     zIndex: 5,
   },
+  brandTitleText: {
+    fontSize: 34,
+    fontFamily: 'PlayfairDisplay-ExtraBoldItalic',
+    fontStyle: 'italic',
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    textAlign: 'center',
+  },
   subtitle: {
+    fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 12.5,
     textAlign: 'center',
     lineHeight: 18,
-    fontWeight: '500',
     maxWidth: 275,
-    marginTop: 2,
-    letterSpacing: -0.1,
+    marginTop: 4,
+    letterSpacing: -0.05,
   },
 
-  // ── Shine Card Wrapper ──
+  // ── Tarjeta Modal ──
   shineCardContainer: {
-    marginVertical: 4,
+    marginVertical: 6,
     borderRadius: 24,
+    shadowColor: 'rgba(96, 165, 250, 0.28)',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.22,
+    shadowOpacity: 0.25,
     shadowRadius: 25,
     elevation: 8,
   },
@@ -643,13 +675,14 @@ const styles = StyleSheet.create({
   },
 
   cardTitle: {
+    fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 21,
-    fontWeight: '700',
     letterSpacing: -0.2,
     marginBottom: 4,
     textAlign: 'left',
   },
   cardDescription: {
+    fontFamily: 'PlusJakartaSans-Regular',
     fontSize: 12.5,
     lineHeight: 18,
     marginBottom: 18,
@@ -667,6 +700,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   errorText: {
+    fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 12,
     color: '#B91C1C',
   },
@@ -702,8 +736,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   googleButtonText: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 14,
-    fontWeight: '600',
   },
   disabled: {
     opacity: 0.65,
@@ -720,9 +754,9 @@ const styles = StyleSheet.create({
     height: 1,
   },
   dividerText: {
+    fontFamily: 'PlusJakartaSans-Medium',
     paddingHorizontal: 10,
     fontSize: 10,
-    fontWeight: '500',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
@@ -732,8 +766,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   fieldLabel: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 12.5,
-    fontWeight: '600',
     marginBottom: 6,
   },
   passwordLabelRow: {
@@ -743,8 +777,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   forgotPasswordLink: {
+    fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 11.5,
-    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -758,6 +792,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   textInputField: {
+    fontFamily: 'PlusJakartaSans-Regular',
     flex: 1,
     fontSize: 13,
     paddingVertical: 0,
@@ -768,6 +803,10 @@ const styles = StyleSheet.create({
   },
 
   // Botón Submit Iniciar Sesión
+  submitButtonTouch: {
+    marginTop: 4,
+    marginBottom: 14,
+  },
   submitBtnGradient: {
     borderRadius: 12,
     paddingVertical: 11,
@@ -778,8 +817,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 4,
-    marginTop: 2,
-    marginBottom: 14,
   },
   submitRow: {
     flexDirection: 'row',
@@ -787,9 +824,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitBtnText: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
   },
   submitBtnArrow: {
     color: '#FFFFFF',
@@ -798,7 +835,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Badge de Cuentas Soportadas
+  // Badge Verde
   supportedAccountsBadge: {
     borderWidth: 1,
     borderRadius: 12,
@@ -815,19 +852,20 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   badgeCheckmark: {
-    fontWeight: '700',
+    fontFamily: 'PlusJakartaSans-Bold',
     fontSize: 12,
     marginRight: 6,
   },
   badgeText: {
+    fontFamily: 'PlusJakartaSans-Regular',
     fontSize: 11,
     lineHeight: 14,
   },
   badgeBold: {
-    fontWeight: '700',
+    fontFamily: 'PlusJakartaSans-Bold',
   },
 
-  // Enlace Crear Cuenta
+  // Crear Cuenta
   registerPromptRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -836,6 +874,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   registerPromptText: {
+    fontFamily: 'PlusJakartaSans-Regular',
     fontSize: 12,
   },
   registerLinkContainer: {
@@ -843,12 +882,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   registerLinkText: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 12,
-    fontWeight: '600',
   },
   registerLinkArrow: {
+    fontFamily: 'PlusJakartaSans-SemiBold',
     fontSize: 11,
-    fontWeight: '600',
     marginLeft: 2,
   },
 
@@ -865,13 +904,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   securityNoticeText: {
+    fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 11,
-    fontWeight: '500',
   },
   creditsText: {
+    fontFamily: 'PlusJakartaSans-Medium',
     fontSize: 10,
     color: '#8E7D9E',
-    fontWeight: '500',
     letterSpacing: 0.3,
   },
 });

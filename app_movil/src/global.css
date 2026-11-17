@@ -1,9 +1,150 @@
+/* global.css - Configuración Tipográfica y de Animaciones de Google Stitch */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+
+  --bg-canvas: #F3F7FC;
+  --card-bg: #FFFFFF;
+  --card-border: #D8E4F2;
+  --text-title: #0F1D38;
+  --text-sub: #526581;
+  --badge-bg: #ECFDF5;
+  --badge-border: #A7F3D0;
+  --badge-text: #047857;
+  --btn-google: #2563EB;
+  --btn-google-text: #FFFFFF;
+  --btn-google-border: transparent;
+  --icon-bg: #E8F1FC;
+  --icon-border: #CFE0F5;
+  --icon-color: #2563EB;
+  --btn-toggle-bg: #FFFFFF;
+  --btn-toggle-border: #D8E4F2;
+  --footer-text: #64748B;
+  --card-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.08), 0 8px 10px -6px rgba(37, 99, 235, 0.04);
+  --input-bg: #F8FAFC;
+  --input-border: #E2E8F0;
+  --input-text: #0F1D38;
+  --input-placeholder: #94A3B8;
+  --divider-color: #E2E8F0;
+  --shine-c1: #38bdf8;
+  --shine-c2: #818cf8;
+  --shine-c3: #34d399;
+  --wave-gradient: linear-gradient(
+    120deg,
+    #00446e 0%,
+    #2563eb 20%,
+    #7c3aed 40%,
+    #ec4899 60%,
+    #0284c7 80%,
+    #00446e 100%
+  );
+  --primary-btn-gradient: linear-gradient(to right, #00446e, #0d5c91);
+  --primary-btn-shadow: 0 4px 16px rgba(0, 68, 110, 0.25);
+}
+
+@keyframes gradient-wave-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-wave-text {
+  background: var(--wave-gradient);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradient-wave-flow 5s ease-in-out infinite;
+  display: inline-block;
+  text-shadow: none;
+}
+
+@keyframes shine-spin {
+  0% {
+    --shine-angle: 0deg;
+  }
+  100% {
+    --shine-angle: 360deg;
+  }
+}
+
+@property --shine-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.shine-border {
+  position: relative;
+  border-radius: 24px;
+  isolation: isolate;
+}
+
+.shine-border::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  padding: 1.5px;
+  border-radius: 25.5px;
+  background: conic-gradient(
+    from var(--shine-angle),
+    transparent 0deg 30deg,
+    #60a5fa 80deg,
+    #93c5fd 130deg,
+    transparent 170deg 210deg,
+    #38bdf8 260deg,
+    #60a5fa 310deg,
+    transparent 350deg 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: shine-spin 9s linear infinite;
+  z-index: 1;
+}
+
+.shine-border-dark::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  padding: 1.5px;
+  border-radius: 25.5px;
+  background: conic-gradient(
+    from var(--shine-angle),
+    transparent 0deg 30deg,
+    #FB7185 80deg,
+    #C084FC 130deg,
+    transparent 170deg 210deg,
+    #FDE047 260deg,
+    #FB7185 310deg,
+    transparent 350deg 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: shine-spin 9s linear infinite;
+  z-index: 1;
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.6) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(180deg); }
+}
+
+.sparkle-icon {
+  animation: sparkle-twinkle 3s ease-in-out infinite;
 }
