@@ -111,7 +111,7 @@ export const LoginScreen: React.FC = () => {
     setLoading(false);
   };
 
-  const isLoading = loading || authLoading;
+  const isLoading = loading;
   const c = isDarkMode ? DARK : LIGHT;
 
   return (
