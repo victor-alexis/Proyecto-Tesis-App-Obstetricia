@@ -20,7 +20,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
-  loading: true,
+  loading: false,
   signInWithGoogle: async () => ({ success: false }),
   signInWithPassword: async () => ({ success: false }),
   signOut: async () => {},
@@ -35,21 +35,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Obtener sesión persistida en el dispositivo
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Timeout de seguridad: asegura que loading pase a false en máx 1s
+    const timeout = setTimeout(() => {
       setLoading(false);
-    });
+    }, 1000);
+
+    // 1. Obtener sesión persistida en el dispositivo
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        clearTimeout(timeout);
+      })
+      .catch(() => {
+        setLoading(false);
+        clearTimeout(timeout);
+      });
 
     // 2. Suscribirse a cambios de estado de autenticación (Login, Logout, Token Refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => {
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -169,4 +184,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-

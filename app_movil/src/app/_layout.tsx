@@ -1,11 +1,10 @@
-// Layout principal de la App Móvil (Verifica si existe sesión)
+// Layout principal de la App Móvil (Muestra LoginScreen directamente sin bloqueos)
 
 import React, { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme, View, ActivityIndicator } from 'react-native';
+import { useColorScheme } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/feedback';
 import { AppTabs } from '@/components/navigation';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import LoginScreen from '@/app/login';
@@ -21,20 +20,13 @@ function RootNavigationGate() {
     }
   }, [loading]);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F3F7FC' }}>
-        <ActivityIndicator size="large" color="#0D5C91" />
-      </View>
-    );
-  }
-
-  // Si no hay sesión activa, muestra la pantalla de Login
+  // Si no hay sesión activa (o mientras verifica en segundo plano),
+  // se muestra inmediatamente la pantalla de Login sin spinners bloqueantes
   if (!session) {
     return <LoginScreen />;
   }
 
-  // Si el usuario está autenticado, tiene acceso a las pantallas principales
+  // Si el usuario ya está autenticado, ingresa a la aplicación
   return <AppTabs />;
 }
 
@@ -44,7 +36,6 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
-        <AnimatedSplashOverlay />
         <RootNavigationGate />
       </AuthProvider>
     </ThemeProvider>
