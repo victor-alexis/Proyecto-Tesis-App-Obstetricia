@@ -1,44 +1,82 @@
+/**
+ * LoginScreen — ClinicalCase
+ * Diseño fiel al mockup de Google Stitch.
+ * Auth integrado con AuthContext (signInWithGoogle + signInWithPassword).
+ */
+
 import React, { useState } from 'react';
 import {
   StyleSheet,
-  View,
   Text,
+  View,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
+  SafeAreaView,
   StatusBar,
+  ScrollView,
+  KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ShieldCheck,
+  Moon,
+  Sun,
+} from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
+import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import { ShineBorder } from '../components/ui';
 
-export default function LoginScreen() {
+// ─── Ícono SVG oficial de Google ─────────────────────────────────────────────
+const GoogleIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Path
+      fill="#4285F4"
+      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+    />
+    <Path
+      fill="#34A853"
+      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+    />
+    <Path
+      fill="#FBBC05"
+      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+    />
+    <Path
+      fill="#EA4335"
+      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+    />
+  </Svg>
+);
+
+// ─── Componente principal ─────────────────────────────────────────────────────
+export const LoginScreen: React.FC = () => {
   const { signInWithGoogle, signInWithPassword, session, loading: authLoading } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Redirigir al dashboard si ya hay sesión
+  // Redirigir si ya hay sesión
   React.useEffect(() => {
-    if (session) {
-      router.replace('/');
-    }
+    if (session) router.replace('/');
   }, [session]);
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
     setErrorMessage(null);
     setLoading(true);
     const result = await signInWithGoogle();
-    if (!result.success && result.error) {
-      setErrorMessage(result.error);
-    }
+    if (!result.success && result.error) setErrorMessage(result.error);
     setLoading(false);
   };
 
@@ -50,345 +88,419 @@ export default function LoginScreen() {
     setErrorMessage(null);
     setLoading(true);
     const result = await signInWithPassword(email, password);
-    if (!result.success && result.error) {
-      setErrorMessage(result.error);
-    }
+    if (!result.success && result.error) setErrorMessage(result.error);
     setLoading(false);
   };
 
+  const isLoading = loading || authLoading;
+
+  // ── Colores adaptativos según modo ────────────────────────────────────────
+  const c = isDarkMode ? DARK : LIGHT;
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+    <View style={[styles.outerContainer, { backgroundColor: c.bgCanvas }]}>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
+        translucent
+      />
 
-      {/* Fondos de luz ambiental (Glow Orbs) */}
-      <View style={styles.ambientTopLeft} />
-      <View style={styles.ambientMiddleRight} />
-      <View style={styles.ambientBottomCenter} />
+      {/* Gradiente ambiental de fondo */}
+      <LinearGradient
+        colors={
+          isDarkMode
+            ? ['#0a0b10', '#13111c', '#08090d']
+            : ['#f8f9fe', '#f2f5fd', '#e9effc']
+        }
+        style={StyleSheet.absoluteFillObject}
+      />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Cabecera / Branding: ClinicalCase con Sparkles */}
-        <View style={styles.header}>
-          {/* Botón flotante superior derecho (Moon icon del mockup) */}
-          <View style={styles.themeTogglePlaceholder}>
-            <View style={styles.themeCircle}>
-              <Ionicons name="moon" size={14} color="#2563EB" />
-            </View>
-          </View>
-
-          {/* Título de la app con destellos */}
-          <View style={styles.titleContainer}>
-            <Text style={styles.sparkleTopRight}>✦</Text>
-            <Text style={styles.sparkleBottomLeft}>✦</Text>
-            <Text style={styles.brandTitle}>ClinicalCase</Text>
-          </View>
-
-          {/* Subtítulo clínico */}
-          <Text style={styles.subtitle}>
-            Sistema de Soporte a la Decisión Clínica y Seguimiento Perinatal
-          </Text>
-        </View>
-
-        {/* Tarjeta de Inicio de Sesión con ShineBorder */}
-        <ShineBorder
-          borderRadius={26}
-          borderWidth={2}
-          duration={9}
-          colors={['#60A5FA', '#93C5FD', '#38BDF8', '#60A5FA']}
-          style={styles.shineWrapper}
-          contentStyle={styles.cardContent}
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardContainer}
         >
-          {/* Título y descripción de la tarjeta */}
-          <Text style={styles.cardTitle}>Bienvenido/a</Text>
-          <Text style={styles.cardDescription}>
-            Para acceder a las herramientas perinatales y módulos clínicos, inicia sesión con tu cuenta.
-          </Text>
-
-          {/* Mensaje de Error si ocurre */}
-          {errorMessage && (
-            <View style={styles.errorContainer}>
-              <Feather name="alert-circle" size={14} color="#DC2626" style={styles.errorIcon} />
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            </View>
-          )}
-
-          {/* Botón oficial de Google Sign-In */}
-          <TouchableOpacity
-            style={[styles.googleButton, (loading || authLoading) && styles.buttonDisabled]}
-            onPress={handleGoogleLogin}
-            disabled={loading || authLoading}
-            activeOpacity={0.88}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.googleIconBadge}>
-              <Svg width={14} height={14} viewBox="0 0 24 24">
-                <Path
-                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"
-                  fill="#4285F4"
-                />
-                <Path
-                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.34 24 12 24z"
-                  fill="#34A853"
-                />
-                <Path
-                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                  fill="#FBBC05"
-                />
-                <Path
-                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-                  fill="#EA4335"
-                />
-              </Svg>
-            </View>
-            <Text style={styles.googleButtonText}>Continuar con Google</Text>
-          </TouchableOpacity>
-
-          {/* Separador "O INGRESA CON TU CORREO" */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>O INGRESA CON TU CORREO</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Campo Correo Institucional / Personal */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Correo institucional / personal</Text>
-            <View style={styles.inputWrapper}>
-              <Feather name="mail" size={16} color="#64748B" style={styles.inputIcon} />
-              <TextInput
-                style={styles.textInput}
-                placeholder="usuario@gmail.com"
-                placeholderTextColor="#94A3B8"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
-            </View>
-          </View>
-
-          {/* Campo Contraseña */}
-          <View style={styles.inputGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.inputLabel}>Contraseña</Text>
-              <TouchableOpacity activeOpacity={0.7}>
-                <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.inputWrapper}>
-              <Feather name="lock" size={16} color="#64748B" style={styles.inputIcon} />
-              <TextInput
-                style={[styles.textInput, { paddingRight: 36 }]}
-                placeholder="••••••••"
-                placeholderTextColor="#94A3B8"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-              />
+            {/* ── Botón flotante de tema ─────────────────────────────────── */}
+            <View style={styles.topBar}>
               <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIconContainer}
-                activeOpacity={0.7}
+                onPress={() => setIsDarkMode(!isDarkMode)}
+                activeOpacity={0.8}
+                style={[
+                  styles.themeButton,
+                  { backgroundColor: c.cardBg, borderColor: c.cardBorder },
+                ]}
               >
-                <Feather
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  size={16}
-                  color="#94A3B8"
-                />
+                {isDarkMode ? (
+                  <Sun size={19} color="#FBBF24" />
+                ) : (
+                  <Moon size={19} color="#0d5c91" />
+                )}
               </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Botón Primario: Iniciar Sesión → */}
-          <TouchableOpacity
-            style={[styles.submitButton, (loading || authLoading) && styles.buttonDisabled]}
-            onPress={handleEmailLogin}
-            disabled={loading || authLoading}
-            activeOpacity={0.88}
-          >
-            {loading || authLoading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <View style={styles.submitContent}>
-                <Text style={styles.submitButtonText}>Iniciar Sesión</Text>
-                <Text style={styles.submitArrow}>→</Text>
+            {/* ── Cabecera de marca ─────────────────────────────────────── */}
+            <View style={styles.header}>
+              <View style={styles.titleRow}>
+                <Text style={styles.sparkleLeft}>✦</Text>
+                <Text
+                  style={[styles.brandTitle, { color: c.textTitle }]}
+                >
+                  ClinicalCase
+                </Text>
+                <Text style={styles.sparkleRight}>✦</Text>
               </View>
-            )}
-          </TouchableOpacity>
+              <Text style={[styles.subtitle, { color: c.textSub }]}>
+                Sistema de Soporte a la Decisión Clínica{'\n'}y Seguimiento Perinatal
+              </Text>
+            </View>
 
-          {/* Badge Informativo de Cuentas */}
-          <View style={styles.infoBadge}>
-            <Text style={styles.checkmark}>✓</Text>
-            <Text style={styles.infoBadgeText}>
-              Admite cuentas <Text style={styles.boldText}>institucionales</Text> y <Text style={styles.boldText}>personales</Text>
-            </Text>
-          </View>
+            {/* ── Tarjeta principal con borde gradiente ────────────────── */}
+            <View style={styles.cardWrapper}>
+              {/* Borde exterior (gradiente animado simulado con LinearGradient) */}
+              <LinearGradient
+                colors={['#60a5fa', '#818cf8', '#34d399', '#60a5fa']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.cardGradientBorder}
+              >
+                <View
+                  style={[
+                    styles.cardInner,
+                    {
+                      backgroundColor: c.cardBg,
+                      shadowColor: isDarkMode ? '#be185d' : '#2563eb',
+                    },
+                  ]}
+                >
+                  {/* Título de bienvenida */}
+                  <Text style={[styles.cardTitle, { color: c.textTitle }]}>
+                    Bienvenido/a
+                  </Text>
+                  <Text style={[styles.cardDescription, { color: c.textSub }]}>
+                    Para acceder a las herramientas perinatales y módulos clínicos, inicia sesión con tu cuenta.
+                  </Text>
 
-          {/* Enlace: Crear una cuenta → */}
-          <View style={styles.registerRow}>
-            <Text style={styles.registerPrompt}>¿No tienes una cuenta?</Text>
-            <TouchableOpacity style={styles.registerLinkContainer} activeOpacity={0.7}>
-              <Text style={styles.registerLinkText}>Crear una cuenta</Text>
-              <Text style={styles.registerArrow}>→</Text>
-            </TouchableOpacity>
-          </View>
-        </ShineBorder>
+                  {/* Error */}
+                  {errorMessage && (
+                    <View style={styles.errorBox}>
+                      <Text style={styles.errorText}>⚠ {errorMessage}</Text>
+                    </View>
+                  )}
 
-        {/* Pie de Página: Seguridad y Créditos de Tesis */}
-        <View style={styles.footer}>
-          <View style={styles.securityRow}>
-            <Ionicons name="lock-closed" size={12} color="#EAB308" />
-            <Text style={styles.securityText}>Conexión clínica cifrada y segura</Text>
-          </View>
-          <Text style={styles.authorText}>
-            Design by Victor Gonzalez & Benjamin Torres
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+                  {/* Botón de Google */}
+                  <TouchableOpacity
+                    style={[
+                      styles.googleButton,
+                      {
+                        backgroundColor: c.btnGoogleBg,
+                        borderColor: c.btnGoogleBorder,
+                      },
+                      isLoading && styles.disabled,
+                    ]}
+                    onPress={handleGoogleLogin}
+                    disabled={isLoading}
+                    activeOpacity={0.88}
+                  >
+                    <View style={styles.googleIconCircle}>
+                      <GoogleIcon size={16} />
+                    </View>
+                    <Text style={[styles.googleButtonText, { color: c.btnGoogleText }]}>
+                      Continuar con Google
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Separador */}
+                  <View style={styles.dividerRow}>
+                    <View style={[styles.dividerLine, { backgroundColor: c.divider }]} />
+                    <Text style={[styles.dividerText, { color: c.textSub }]}>
+                      O INGRESA CON TU CORREO
+                    </Text>
+                    <View style={[styles.dividerLine, { backgroundColor: c.divider }]} />
+                  </View>
+
+                  {/* Campo: Correo */}
+                  <View style={styles.fieldGroup}>
+                    <Text style={[styles.fieldLabel, { color: c.textTitle }]}>
+                      Correo institucional / personal
+                    </Text>
+                    <View
+                      style={[
+                        styles.inputWrapper,
+                        { backgroundColor: c.inputBg, borderColor: c.inputBorder },
+                      ]}
+                    >
+                      <Mail size={15} color={c.textSub} style={styles.inputIcon} />
+                      <TextInput
+                        style={[styles.textInput, { color: c.inputText }]}
+                        placeholder="usuario@gmail.com"
+                        placeholderTextColor={c.inputPlaceholder}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        value={email}
+                        onChangeText={setEmail}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Campo: Contraseña */}
+                  <View style={styles.fieldGroup}>
+                    <View style={styles.labelRow}>
+                      <Text style={[styles.fieldLabel, { color: c.textTitle }]}>
+                        Contraseña
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => router.push('/forgot-password' as any)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View
+                      style={[
+                        styles.inputWrapper,
+                        { backgroundColor: c.inputBg, borderColor: c.inputBorder },
+                      ]}
+                    >
+                      <Lock size={15} color={c.textSub} style={styles.inputIcon} />
+                      <TextInput
+                        style={[styles.textInput, { color: c.inputText, paddingRight: 36 }]}
+                        placeholder="••••••••"
+                        placeholderTextColor={c.inputPlaceholder}
+                        secureTextEntry={!showPassword}
+                        value={password}
+                        onChangeText={setPassword}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowPassword(!showPassword)}
+                        style={styles.eyeBtn}
+                        activeOpacity={0.7}
+                      >
+                        {showPassword ? (
+                          <EyeOff size={15} color={c.inputPlaceholder} />
+                        ) : (
+                          <Eye size={15} color={c.inputPlaceholder} />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Botón: Iniciar Sesión */}
+                  <TouchableOpacity
+                    style={[styles.submitButton, isLoading && styles.disabled]}
+                    onPress={handleEmailLogin}
+                    disabled={isLoading}
+                    activeOpacity={0.88}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color="#FFFFFF" size="small" />
+                    ) : (
+                      <View style={styles.submitRow}>
+                        <Text style={styles.submitText}>Iniciar Sesión</Text>
+                        <ArrowRight size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+
+                  {/* Badge verde */}
+                  <View style={styles.infoBadge}>
+                    <ShieldCheck size={13} color="#047857" style={{ marginRight: 6 }} />
+                    <Text style={styles.infoBadgeText}>
+                      Admite cuentas{' '}
+                      <Text style={styles.boldGreen}>institucionales</Text>
+                      {' '}y{' '}
+                      <Text style={styles.boldGreen}>personales</Text>
+                    </Text>
+                  </View>
+
+                  {/* Crear cuenta */}
+                  <View style={styles.registerRow}>
+                    <Text style={[styles.registerPrompt, { color: c.textSub }]}>
+                      ¿No tienes una cuenta?{'  '}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => router.push('/register' as any)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.registerLink}>Crear una cuenta →</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
+
+            {/* ── Pie de página ─────────────────────────────────────────── */}
+            <View style={styles.footer}>
+              <Text style={styles.footerSecurity}>🔒 Conexión clínica cifrada y segura</Text>
+              <Text style={[styles.footerCredits, { color: c.footerText }]}>
+                Design by Victor Gonzalez &amp; Benjamin Torres
+              </Text>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
-}
+};
 
+export default LoginScreen;
+
+// ─── Paletas de color ─────────────────────────────────────────────────────────
+const LIGHT = {
+  bgCanvas: '#F3F7FC',
+  cardBg: '#FFFFFF',
+  cardBorder: '#D8E4F2',
+  textTitle: '#0F1D38',
+  textSub: '#526581',
+  btnGoogleBg: '#2563EB',
+  btnGoogleText: '#FFFFFF',
+  btnGoogleBorder: 'transparent',
+  divider: '#E2E8F0',
+  inputBg: '#F8FAFC',
+  inputBorder: '#E2E8F0',
+  inputText: '#0F1D38',
+  inputPlaceholder: '#94A3B8',
+  footerText: '#64748B',
+};
+
+const DARK = {
+  bgCanvas: '#130F1A',
+  cardBg: '#1C1527',
+  cardBorder: '#3A2449',
+  textTitle: '#FDF2F8',
+  textSub: '#D1B3DB',
+  btnGoogleBg: '#2A1D3B',
+  btnGoogleText: '#FDF2F8',
+  btnGoogleBorder: '#4A2C5E',
+  divider: '#3A2449',
+  inputBg: '#181122',
+  inputBorder: '#4A2C5E',
+  inputText: '#F1F5F9',
+  inputPlaceholder: '#9481A4',
+  footerText: '#8E7D9E',
+};
+
+// ─── Estilos ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: '#F3F7FC',
-    position: 'relative',
   },
-  // Orbes ambientales tenues de fondo
-  ambientTopLeft: {
-    position: 'absolute',
-    top: -40,
-    left: -40,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(190, 24, 93, 0.05)',
-  },
-  ambientMiddleRight: {
-    position: 'absolute',
-    top: '30%',
-    right: -50,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: 'rgba(124, 58, 237, 0.04)',
-  },
-  ambientBottomCenter: {
-    position: 'absolute',
-    bottom: -40,
-    left: '25%',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(56, 189, 248, 0.04)',
+  keyboardContainer: {
+    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingTop: 8,
     paddingBottom: 24,
     maxWidth: 420,
     width: '100%',
     alignSelf: 'center',
-    justifyContent: 'space-between',
     minHeight: '100%',
+    justifyContent: 'space-between',
   },
-  header: {
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 12,
-    position: 'relative',
-    width: '100%',
+
+  // Top bar (tema)
+  topBar: {
+    alignItems: 'flex-end',
+    marginBottom: 4,
+    marginTop: Platform.OS === 'android' ? 32 : 4,
   },
-  themeTogglePlaceholder: {
-    position: 'absolute',
-    top: -4,
-    right: 0,
-    zIndex: 10,
-  },
-  themeCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+  themeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#D8E4F2',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  titleContainer: {
-    position: 'relative',
+
+  // Encabezado / branding
+  header: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 4,
+    marginBottom: 14,
   },
-  sparkleTopRight: {
-    position: 'absolute',
-    top: -6,
-    right: -14,
-    fontSize: 13,
-    color: '#FDE047',
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
   },
-  sparkleBottomLeft: {
-    position: 'absolute',
-    bottom: -2,
-    left: -14,
-    fontSize: 11,
+  sparkleLeft: {
+    fontSize: 16,
     color: '#FDA4AF',
+    marginTop: 6,
+  },
+  sparkleRight: {
+    fontSize: 14,
+    color: '#FDE047',
+    marginBottom: 6,
   },
   brandTitle: {
-    fontSize: 34,
+    fontSize: 36,
     fontWeight: '800',
     fontStyle: 'italic',
-    color: '#0F2444',
     letterSpacing: -0.5,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   subtitle: {
     fontSize: 12.5,
-    color: '#627D98',
     textAlign: 'center',
-    maxWidth: 280,
     lineHeight: 18,
     fontWeight: '500',
-    marginTop: 4,
+    maxWidth: 270,
   },
-  shineWrapper: {
+
+  // Tarjeta con borde gradiente
+  cardWrapper: {
+    marginVertical: 4,
+    borderRadius: 26,
     shadowColor: '#60A5FA',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 24,
-    elevation: 5,
-    marginVertical: 6,
+    elevation: 6,
   },
-  cardContent: {
-    backgroundColor: '#FFFFFF',
+  cardGradientBorder: {
+    borderRadius: 26,
+    padding: 1.5,
+  },
+  cardInner: {
+    borderRadius: 25,
     paddingHorizontal: 20,
-    paddingTop: 22,
+    paddingTop: 24,
     paddingBottom: 20,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 4,
   },
+
   cardTitle: {
-    fontSize: 21,
+    fontSize: 22,
     fontWeight: '700',
-    color: '#0F172A',
     marginBottom: 4,
   },
   cardDescription: {
     fontSize: 12.5,
-    color: '#64748B',
     lineHeight: 18,
     marginBottom: 18,
   },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+
+  // Error
+  errorBox: {
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FECACA',
@@ -397,78 +509,72 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 14,
   },
-  errorIcon: {
-    marginRight: 8,
-  },
   errorText: {
     fontSize: 12,
     color: '#B91C1C',
-    flex: 1,
   },
+
+  // Botón Google
   googleButton: {
-    backgroundColor: '#2563EB',
     borderRadius: 12,
     paddingVertical: 11,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.32,
+    shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 3,
     marginBottom: 14,
+    gap: 10,
   },
-  googleIconBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  googleIconCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
   },
   googleButtonText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
+  disabled: { opacity: 0.65 },
+
+  // Separador
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 12,
+    gap: 8,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E2E8F0',
   },
   dividerText: {
-    paddingHorizontal: 10,
     fontSize: 9.5,
     fontWeight: '600',
-    color: '#94A3B8',
     letterSpacing: 0.8,
   },
-  inputGroup: {
-    marginBottom: 13,
-  },
+
+  // Campos de entrada
+  fieldGroup: { marginBottom: 13 },
   labelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  inputLabel: {
+  fieldLabel: {
     fontSize: 12.5,
     fontWeight: '600',
-    color: '#1E293B',
     marginBottom: 6,
   },
-  forgotPasswordText: {
+  forgotText: {
     fontSize: 11.5,
     fontWeight: '500',
     color: '#2563EB',
@@ -477,57 +583,46 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     borderRadius: 12,
     paddingHorizontal: 12,
-    height: 42,
+    height: 44,
   },
-  inputIcon: {
-    marginRight: 10,
-  },
+  inputIcon: { marginRight: 10 },
   textInput: {
     flex: 1,
     fontSize: 13,
-    color: '#1E293B',
     paddingVertical: 0,
     height: '100%',
   },
-  eyeIconContainer: {
-    padding: 6,
-  },
+  eyeBtn: { padding: 6 },
+
+  // Botón: Iniciar Sesión
   submitButton: {
     backgroundColor: '#0D5C91',
     borderRadius: 12,
-    paddingVertical: 11,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#00446E',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
+    shadowOpacity: 0.25,
     shadowRadius: 12,
     elevation: 3,
-    marginTop: 6,
+    marginTop: 4,
     marginBottom: 14,
   },
-  submitContent: {
+  submitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  submitButtonText: {
+  submitText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 14.5,
+    fontWeight: '700',
   },
-  submitArrow: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginLeft: 6,
-    fontWeight: '600',
-  },
+
+  // Badge verde
   infoBadge: {
     backgroundColor: '#ECFDF5',
     borderWidth: 1,
@@ -540,64 +635,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  checkmark: {
-    color: '#047857',
-    fontWeight: '700',
-    marginRight: 6,
-    fontSize: 12,
-  },
   infoBadgeText: {
     fontSize: 11,
     color: '#047857',
   },
-  boldText: {
+  boldGreen: {
     fontWeight: '700',
+    color: '#047857',
   },
+
+  // Crear cuenta
   registerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    flexWrap: 'wrap',
     marginTop: 2,
   },
   registerPrompt: {
     fontSize: 12,
-    color: '#64748B',
-    marginRight: 5,
   },
-  registerLinkContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  registerLinkText: {
+  registerLink: {
     fontSize: 12,
     fontWeight: '600',
     color: '#0D5C91',
   },
-  registerArrow: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#0D5C91',
-    marginLeft: 2,
-  },
+
+  // Footer
   footer: {
     alignItems: 'center',
     marginTop: 14,
     paddingBottom: 4,
+    gap: 3,
   },
-  securityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  securityText: {
+  footerSecurity: {
     fontSize: 11,
     color: '#64748B',
     fontWeight: '500',
   },
-  authorText: {
+  footerCredits: {
     fontSize: 10,
-    color: '#8E7D9E',
     fontWeight: '500',
     letterSpacing: 0.3,
   },
