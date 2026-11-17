@@ -99,11 +99,7 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <View style={[styles.outerContainer, { backgroundColor: c.bgCanvas }]}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
       {/* Gradiente ambiental de fondo */}
       <LinearGradient
@@ -112,7 +108,7 @@ export const LoginScreen: React.FC = () => {
             ? ['#0a0b10', '#13111c', '#08090d']
             : ['#f8f9fe', '#f2f5fd', '#e9effc']
         }
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       <SafeAreaView style={styles.safeArea}>
