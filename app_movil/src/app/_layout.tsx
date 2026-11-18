@@ -1,18 +1,16 @@
-// Layout principal de la App Móvil (Muestra LoginScreen directamente sin bloqueos)
+// Layout principal de la App Móvil (Expo Router Stack Navigation)
 
 import React, { useEffect } from 'react';
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { Stack, DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
 
-import { AppTabs } from '@/components/navigation';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import LoginScreen from '@/app/login';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-function RootNavigationGate() {
-  const { session, loading } = useAuth();
+function RootNavigator() {
+  const { loading } = useAuth();
 
   useEffect(() => {
     if (!loading) {
@@ -20,14 +18,15 @@ function RootNavigationGate() {
     }
   }, [loading]);
 
-  // Si no hay sesión activa (o mientras verifica en segundo plano),
-  // se muestra inmediatamente la pantalla de Login sin spinners bloqueantes
-  if (!session) {
-    return <LoginScreen />;
-  }
-
-  // Si el usuario ya está autenticado, ingresa a la aplicación
-  return <AppTabs />;
+  return (
+    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="register" options={{ headerShown: false }} />
+      <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="explore" options={{ headerShown: false }} />
+    </Stack>
+  );
 }
 
 export default function RootLayout() {
@@ -36,7 +35,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
-        <RootNavigationGate />
+        <RootNavigator />
       </AuthProvider>
     </ThemeProvider>
   );

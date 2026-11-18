@@ -23,6 +23,10 @@ export default function HomeScreen() {
     }
   }, [session]);
 
+  if (!session) {
+    return null;
+  }
+
   const userEmail = user?.email || 'profesional@obstetricia.cl';
   const userName =
     user?.user_metadata?.full_name ||
