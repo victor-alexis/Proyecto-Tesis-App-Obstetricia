@@ -46,6 +46,24 @@
 - [x] **Paso 2.4: Protección de Endpoints en Backend:**
   - Implementación de middleware `requireAuth` en `backend/src/shared/middleware/authMiddleware.js`.
   - Montaje de rutas protegidas en `backend/src/index.js` (`/api/cases` y `/api/rag`).
+- [x] **Paso 2.5: Blindaje completo del flujo de autenticación Email/OTP (2026-11-19):**
+  - Creado `authErrors.ts` con mapeo Supabase → errores en español y validador RFC 5322.
+  - Reescrito `AuthContext.tsx` con métodos: `signUpWithEmail`, `verifySignupOtp`, `resendSignupOtp`, `sendPasswordResetOtp`, `verifyRecoveryOtp`, `updatePassword`.
+  - Creado componente `OtpInput.tsx` (6 casilleros con timer de reenvío, pegado y autocompletado nativo).
+  - Reescritas pantallas: `login.tsx`, `register.tsx`, `forgot-password.tsx`.
+  - Nuevas pantallas: `verify-otp.tsx` (flujo unificado signup/recovery) y `reset-password.tsx`.
+  - Build exportado con 0 errores TypeScript. Deploy en Vercel activo.
+- [ ] **[PENDIENTE] Paso 2.6: Configurar dominio propio para email de producción (Resend SMTP):**
+  - **Situación actual:** Resend en modo gratuito solo envía correos a `victoralexis.chile@gmail.com` (dirección registrada). No puede enviar OTPs a usuarios reales sin dominio propio verificado.
+  - **SMTP configurado en Supabase** con `onboarding@resend.dev` (solo para pruebas internas).
+  - **GitHub Student Pack rechazado** para cuenta `@victor8alexis`. Corregir antes de repostular:
+    1. Desactivar VPN al momento de aplicar.
+    2. Nombre en perfil GitHub debe coincidir exactamente con documento académico.
+    3. Activar 2FA en GitHub (`github.com/settings/security`).
+    4. Al seleccionar ULagos, marcar _"My selected school has incorrect or incomplete information"_.
+    5. Adjuntar certificado de alumno regular 2026 emitido por ULagos.
+  - **Alternativa sin Student Pack:** Namecheap dominio `.xyz` (~\$1 USD) + Cloudflare DNS + Zoho Mail Free (hasta 5 cuentas) + Resend con dominio verificado.
+  - **Objetivo final:** Cambiar remitente de `onboarding@resend.dev` a `noreply@[dominio].cl` para enviar OTPs a cualquier usuario registrado.
 
 ---
 
