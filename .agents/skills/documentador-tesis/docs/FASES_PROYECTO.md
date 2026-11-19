@@ -53,17 +53,21 @@
   - Reescritas pantallas: `login.tsx`, `register.tsx`, `forgot-password.tsx`.
   - Nuevas pantallas: `verify-otp.tsx` (flujo unificado signup/recovery) y `reset-password.tsx`.
   - Build exportado con 0 errores TypeScript. Deploy en Vercel activo.
-- [ ] **[PENDIENTE] Paso 2.6: Configurar dominio propio para email de producción (Resend SMTP):**
-  - **Situación actual:** Resend en modo gratuito solo envía correos a `victoralexis.chile@gmail.com` (dirección registrada). No puede enviar OTPs a usuarios reales sin dominio propio verificado.
-  - **SMTP configurado en Supabase** con `onboarding@resend.dev` (solo para pruebas internas).
-  - **GitHub Student Pack rechazado** para cuenta `@victor8alexis`. Corregir antes de repostular:
-    1. Desactivar VPN al momento de aplicar.
-    2. Nombre en perfil GitHub debe coincidir exactamente con documento académico.
-    3. Activar 2FA en GitHub (`github.com/settings/security`).
-    4. Al seleccionar ULagos, marcar _"My selected school has incorrect or incomplete information"_.
-    5. Adjuntar certificado de alumno regular 2026 emitido por ULagos.
-  - **Alternativa sin Student Pack:** Namecheap dominio `.xyz` (~\$1 USD) + Cloudflare DNS + Zoho Mail Free (hasta 5 cuentas) + Resend con dominio verificado.
-  - **Objetivo final:** Cambiar remitente de `onboarding@resend.dev` a `noreply@[dominio].cl` para enviar OTPs a cualquier usuario registrado.
+- [x] **Paso 2.6: SMTP Gmail para OTP en desarrollo (2026-11-19):**
+  - Configurado Gmail SMTP en Supabase con `victoralexis.chile@gmail.com` + App Password.
+  - Permite enviar OTPs a **cualquier correo** sin restricciones de dominio.
+  - Límite: 500 emails/día — suficiente para desarrollo y tesis.
+  - Remitente: `victoralexis.chile@gmail.com` → Sender name: `ClinicalCase`.
+- [ ] **[PENDIENTE] Paso 2.7: Migrar SMTP a Resend con dominio propio (producción real):**
+  - **Trigger:** Cuando se tenga dominio propio verificado (ej: `clinicalcase.cl` o similar).
+  - **Pasos al tener dominio:**
+    1. Ir a Resend → Domains → Add Domain → configurar registros DNS (MX, SPF, DKIM).
+    2. Actualizar SMTP en Supabase: host `smtp.resend.com`, port `465`, user `resend`, sender `noreply@[dominio]`.
+    3. Deshabilitar Gmail SMTP en Supabase.
+  - **Opciones para obtener dominio:**
+    - GitHub Student Pack (repostular corrigiendo: sin VPN, 2FA activo, nombre GitHub = documento, certificado ULagos).
+    - Namecheap dominio `.xyz` (~\$1 USD) + Cloudflare DNS + Zoho Mail Free.
+  - **Beneficio:** Remitente profesional `noreply@clinicalcase.cl`, mejor deliverability, sin límite de 500/día.
 
 ---
 
