@@ -4,6 +4,35 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
 
 ---
 
+### [2026-11-19] - Flujos Completos de Autenticación Blindados (Login, Registro con OTP y Recuperación de Contraseña)
+* **Responsable:** Víctor Alexis & Asistente IA
+* **Fase:** Fase 2 (Frontend Móvil & Autenticación de Seguridad Clínica)
+
+#### ¿Qué se hizo?
+1. **Rediseño Fiel de la Pantalla de Login:**
+   - Se removió cualquier distorsión visual de SVGs pesados que provocaban un anillo deformado en web.
+   - Implementación pulcra según el diseño de referencia: Fondo níveo clínico (`#F3F7FC`) con orbes bioluminiscentes suaves, botón conmutador de tema (`🌙`), tipografía serif itálica `ClinicalCase` con destellos `✦`, tarjeta blanca con esquinas de 24px, botón oficial de Google (`#2563EB`), botón de inicio de sesión (`#0D5C91`), badge institucional y aviso de seguridad clínica cifrada.
+2. **Capa de Errores y Validaciones Blindadas (`src/utils/authErrors.ts`):**
+   - Mapeo completo de errores de Supabase Auth a mensajes claros en español clínico.
+   - Validador RFC 5322 para correos institucionales y personales.
+   - Detección inteligente de `isEmailNotConfirmed` para redirigir directamente al OTP de activación si el usuario intenta acceder sin verificar su cuenta.
+3. **Componente Reutilizable OTP (`src/components/auth/OtpInput.tsx`):**
+   - 6 casilleros independientes visuales con resaltado dinámico de foco, soporte para pegado directo de código de 6 dígitos, autocompletado SMS/email nativo (`oneTimeCode`), soporte web/móvil y temporizador regresivo de reenvío (60 segundos).
+4. **Flujo de Registro con Verificación OTP (`src/app/register.tsx` y `src/app/verify-otp.tsx`):**
+   - Registro con `signUpWithEmail` y metadatos del profesional de salud.
+   - Envío automático de código OTP y transición inmediata a `/verify-otp?type=signup`.
+   - Confirmación mediante `supabase.auth.verifyOtp` y acceso automático a la app.
+5. **Flujo de Recuperación de Contraseña (`src/app/forgot-password.tsx`, `src/app/verify-otp.tsx` y `src/app/reset-password.tsx`):**
+   - Solicitud de código de seguridad con `supabase.auth.resetPasswordForEmail`.
+   - Verificación OTP con `type: 'recovery'`.
+   - Pantalla dedicada de cambio de clave (`reset-password.tsx`) con confirmación y ejecución de `supabase.auth.updateUser({ password })`.
+6. **Verificación Técnica:**
+   - `tsc --noEmit` completado con 0 errores de tipado.
+   - `npx expo export --platform web` generó exitosamente los 9 paquetes estáticos de rutas.
+   - Despliegue automático a GitHub y Vercel en la rama `main`.
+
+---
+
 ### [2026-11-12] - Limpieza Integral del Proyecto e Implementación del Login Inicial
 * **Responsable:** Víctor Alexis & Asistente IA
 * **Fase:** Fase 2 (Frontend Móvil & Autenticación)
