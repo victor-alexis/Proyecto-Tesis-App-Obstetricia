@@ -1,6 +1,7 @@
-export * from './LoginBackground';
-export * from './LoginBrand';
-export * from './LoginCard';
-export * from './GoogleButton';
-export * from './AuthInput';
-export * from './LoginFooter';
+export { LoginBackground } from './LoginBackground';
+export { LoginBrand } from './LoginBrand';
+export { LoginCard } from './LoginCard';
+export { LoginFooter } from './LoginFooter';
+export { GoogleButton } from './GoogleButton';
+export { AuthInput } from './AuthInput';
+export { OtpInput } from './OtpInput';

@@ -1,7 +1,8 @@
 /**
  * register.tsx
  * Pantalla de Registro de ClinicalCase.
- * Permite a nuevos profesionales registrarse con correo institucional/personal y contraseña en Supabase.
+ * Permite a nuevos profesionales registrarse con correo institucional/personal y contraseña.
+ * Conectada al flujo de verificación OTP de 6 dígitos.
  */
 
 import React, { useState } from 'react';
@@ -17,25 +18,35 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, CheckCircle2 } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { LoginBackground, LoginBrand, AuthInput, LoginFooter } from '../components/auth';
-import { supabase } from '../services/supabase';
+import { useAuth } from '../context/AuthContext';
+import { isValidEmail } from '../utils/authErrors';
 
 export default function RegisterScreen() {
+  const { signUpWithEmail } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleRegister = async () => {
-    if (!fullName.trim() || !email.trim() || !password) {
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName || !trimmedEmail || !password) {
       setErrorMessage('Por favor completa todos los campos.');
       return;
     }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setErrorMessage('Por favor ingresa un correo electrónico con formato válido.');
+      return;
+    }
+
     if (password.length < 6) {
       setErrorMessage('La contraseña debe tener al menos 6 caracteres.');
       return;
@@ -45,23 +56,29 @@ export default function RegisterScreen() {
       setLoading(true);
       setErrorMessage(null);
 
-      const { error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-          },
-        },
-      });
+      const result = await signUpWithEmail(trimmedEmail, password, trimmedName);
 
-      if (error) {
-        setErrorMessage(error.message);
-      } else {
-        setSuccessMessage('¡Cuenta creada exitosamente! Revisa tu correo para verificar tu cuenta.');
+      if (!result.success) {
+        setErrorMessage(result.error || 'Error al procesar el registro.');
+        return;
       }
+
+      // Si la sesión ya se inició automáticamente, ir al home
+      if (result.session) {
+        router.replace('/');
+        return;
+      }
+
+      // De lo contrario, navegar a la pantalla de verificación OTP
+      router.push({
+        pathname: '/verify-otp',
+        params: {
+          email: trimmedEmail,
+          type: 'signup',
+        },
+      } as any);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Error al procesar el registro.');
+      setErrorMessage(err?.message || 'Error inesperado al registrar cuenta.');
     } finally {
       setLoading(false);
     }
@@ -89,17 +106,10 @@ export default function RegisterScreen() {
                 Regístrate con tu correo para acceder al asistente RAG y herramientas perinatales.
               </Text>
 
-              {/* Mensajes de Estado */}
+              {/* Mensajes de Error */}
               {errorMessage && (
                 <View style={styles.errorBox}>
                   <Text style={styles.errorText}>⚠ {errorMessage}</Text>
-                </View>
-              )}
-
-              {successMessage && (
-                <View style={styles.successBox}>
-                  <CheckCircle2 size={16} color="#0F8B66" style={{ marginRight: 8 }} />
-                  <Text style={styles.successText}>{successMessage}</Text>
                 </View>
               )}
 
@@ -141,7 +151,7 @@ export default function RegisterScreen() {
                 activeOpacity={0.88}
               >
                 <LinearGradient
-                  colors={['#07536D', '#063D58']}
+                  colors={['#00446E', '#0D5C91']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.submitGradient}
@@ -180,7 +190,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F1F7FD',
+    backgroundColor: '#F3F7FC',
   },
   safeArea: {
     flex: 1,
@@ -199,28 +209,28 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    paddingHorizontal: 22,
+    borderRadius: 24,
+    paddingHorizontal: 20,
     paddingTop: 22,
     paddingBottom: 22,
-    shadowColor: '#07536D',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
     shadowRadius: 18,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#E6EFF7',
+    borderColor: '#D8E4F2',
   },
   cardTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#063D58',
+    color: '#0F172A',
     marginBottom: 4,
     fontFamily: 'PlusJakartaSans-Bold',
   },
   cardDescription: {
     fontSize: 12.5,
-    color: '#5A738E',
+    color: '#64748B',
     lineHeight: 18,
     marginBottom: 16,
     fontFamily: 'PlusJakartaSans-Regular',
@@ -239,28 +249,11 @@ const styles = StyleSheet.create({
     color: '#B91C1C',
     fontFamily: 'PlusJakartaSans-Medium',
   },
-  successBox: {
-    backgroundColor: '#EDFAF4',
-    borderWidth: 1,
-    borderColor: '#BCE8D3',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  successText: {
-    fontSize: 12,
-    color: '#0F8B66',
-    flex: 1,
-    fontFamily: 'PlusJakartaSans-Medium',
-  },
   submitButtonTouch: {
     marginTop: 8,
     marginBottom: 14,
     borderRadius: 12,
-    shadowColor: '#07536D',
+    shadowColor: '#00446E',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.22,
     shadowRadius: 10,
@@ -297,13 +290,13 @@ const styles = StyleSheet.create({
   },
   loginPrompt: {
     fontSize: 12.5,
-    color: '#5A738E',
+    color: '#64748B',
     fontFamily: 'PlusJakartaSans-Regular',
   },
   loginLink: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: '#07536D',
+    color: '#0D5C91',
     fontFamily: 'PlusJakartaSans-Bold',
   },
 });

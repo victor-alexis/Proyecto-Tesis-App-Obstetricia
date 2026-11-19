@@ -3,6 +3,7 @@
  * Pantalla Principal de Inicio de Sesión de ClinicalCase.
  * Reestructurada modularmente bajo estándares Senior UI/UX.
  * Orquesta LoginBackground, LoginBrand, LoginCard y LoginFooter integrados con Supabase Auth.
+ * Blindada con validación RFC 5322 y redirección automática para confirmación de correo.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -24,6 +25,7 @@ import {
   LoginFooter,
 } from '../components/auth';
 import { useAuth } from '../context/AuthContext';
+import { isValidEmail } from '../utils/authErrors';
 
 export default function LoginScreen() {
   const { signInWithGoogle, signInWithPassword, session } = useAuth();
@@ -53,17 +55,36 @@ export default function LoginScreen() {
   };
 
   const handleEmailLogin = async (email: string, pass: string) => {
-    if (!email.trim() || !pass) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !pass) {
       setErrorMessage('Por favor ingresa tu correo institucional o personal y contraseña.');
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setErrorMessage('Por favor ingresa un formato de correo electrónico válido.');
       return;
     }
 
     setErrorMessage(null);
     setLoading(true);
     try {
-      const result = await signInWithPassword(email.trim(), pass);
-      if (!result.success && result.error) {
-        setErrorMessage(result.error);
+      const result = await signInWithPassword(trimmedEmail, pass);
+
+      if (!result.success) {
+        if (result.isEmailNotConfirmed) {
+          // Si el correo no ha sido verificado, redirigir directamente al OTP de verificación
+          router.push({
+            pathname: '/verify-otp',
+            params: {
+              email: trimmedEmail,
+              type: 'signup',
+            },
+          } as any);
+          return;
+        }
+
+        setErrorMessage(result.error || 'Credenciales inválidas.');
       }
     } catch (err: any) {
       setErrorMessage(err?.message || 'Error al iniciar sesión con correo.');
@@ -76,7 +97,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      {/* ── Fondo Institucional con Curvas Orgánicas en Esquina Superior Derecha ── */}
+      {/* ── Fondo Institucional Clínico ── */}
       <LoginBackground />
 
       <SafeAreaView style={styles.safeArea}>
@@ -89,7 +110,7 @@ export default function LoginScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* ── Encabezado: Corazón Maternal + ClinicalCase + Subtítulo ── */}
+            {/* ── Encabezado: ClinicalCase + Subtítulo ── */}
             <LoginBrand />
 
             {/* ── Tarjeta Blanca de Autenticación ── */}
@@ -100,7 +121,7 @@ export default function LoginScreen() {
               errorMessage={errorMessage}
             />
 
-            {/* ── Pie de Página: Fotografía Maternal + Aviso de Seguridad + Créditos ── */}
+            {/* ── Pie de Página: Aviso de Seguridad + Créditos ── */}
             <LoginFooter />
           </ScrollView>
         </KeyboardAvoidingView>
@@ -112,7 +133,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F1F7FD',
+    backgroundColor: '#F3F7FC',
   },
   safeArea: {
     flex: 1,

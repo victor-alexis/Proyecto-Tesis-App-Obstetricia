@@ -1,7 +1,7 @@
 /**
  * forgot-password.tsx
  * Pantalla de Recuperación de Contraseña de ClinicalCase.
- * Envía un correo de restablecimiento seguro mediante Supabase Auth.
+ * Envía un código OTP de recuperación de 6 dígitos mediante Supabase Auth.
  */
 
 import React, { useState } from 'react';
@@ -17,21 +17,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, CheckCircle2 } from 'lucide-react-native';
+import { ArrowRight, KeyRound } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { LoginBackground, LoginBrand, AuthInput, LoginFooter } from '../components/auth';
-import { supabase } from '../services/supabase';
+import { useAuth } from '../context/AuthContext';
+import { isValidEmail } from '../utils/authErrors';
 
 export default function ForgotPasswordScreen() {
+  const { sendPasswordResetOtp } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleResetPassword = async () => {
-    if (!email.trim()) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
       setErrorMessage('Por favor ingresa tu correo institucional o personal.');
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setErrorMessage('Por favor ingresa un formato de correo electrónico válido.');
       return;
     }
 
@@ -39,15 +46,23 @@ export default function ForgotPasswordScreen() {
       setLoading(true);
       setErrorMessage(null);
 
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+      const result = await sendPasswordResetOtp(trimmedEmail);
 
-      if (error) {
-        setErrorMessage(error.message);
-      } else {
-        setSuccessMessage('Si el correo está registrado, recibirás un enlace de restablecimiento.');
+      if (!result.success) {
+        setErrorMessage(result.error || 'Error al procesar la solicitud.');
+        return;
       }
+
+      // Redirigir a la pantalla de verificación OTP para recuperación
+      router.push({
+        pathname: '/verify-otp',
+        params: {
+          email: trimmedEmail,
+          type: 'recovery',
+        },
+      } as any);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Error al procesar la solicitud.');
+      setErrorMessage(err?.message || 'Error inesperado al solicitar el código.');
     } finally {
       setLoading(false);
     }
@@ -70,22 +85,19 @@ export default function ForgotPasswordScreen() {
 
             {/* ── Tarjeta de Recuperación ── */}
             <View style={styles.card}>
+              <View style={styles.iconCircle}>
+                <KeyRound size={26} color="#2563EB" />
+              </View>
+
               <Text style={styles.cardTitle}>Recuperar Contraseña</Text>
               <Text style={styles.cardDescription}>
-                Ingresa tu correo institucional o personal registrado y te enviaremos las instrucciones de recuperación.
+                Ingresa tu correo institucional o personal. Te enviaremos un código de 6 dígitos para restablecer tu acceso.
               </Text>
 
-              {/* Mensajes de Estado */}
+              {/* Mensajes de Error */}
               {errorMessage && (
                 <View style={styles.errorBox}>
                   <Text style={styles.errorText}>⚠ {errorMessage}</Text>
-                </View>
-              )}
-
-              {successMessage && (
-                <View style={styles.successBox}>
-                  <CheckCircle2 size={16} color="#0F8B66" style={{ marginRight: 8 }} />
-                  <Text style={styles.successText}>{successMessage}</Text>
                 </View>
               )}
 
@@ -108,7 +120,7 @@ export default function ForgotPasswordScreen() {
                 activeOpacity={0.88}
               >
                 <LinearGradient
-                  colors={['#07536D', '#063D58']}
+                  colors={['#00446E', '#0D5C91']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.submitGradient}
@@ -117,7 +129,7 @@ export default function ForgotPasswordScreen() {
                     <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <View style={styles.submitContent}>
-                      <Text style={styles.submitText}>Enviar instrucciones</Text>
+                      <Text style={styles.submitText}>Enviar código de seguridad</Text>
                       <ArrowRight size={17} color="#FFFFFF" style={styles.submitArrow} />
                     </View>
                   )}
@@ -146,7 +158,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F1F7FD',
+    backgroundColor: '#F3F7FC',
   },
   safeArea: {
     flex: 1,
@@ -156,7 +168,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 14,
     paddingBottom: 24,
     maxWidth: 420,
     width: '100%',
@@ -165,33 +177,48 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    paddingHorizontal: 22,
+    borderRadius: 24,
+    paddingHorizontal: 20,
     paddingTop: 22,
     paddingBottom: 22,
-    shadowColor: '#07536D',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
     shadowRadius: 18,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#E6EFF7',
+    borderColor: '#D8E4F2',
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
   cardTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#063D58',
+    color: '#0F172A',
     marginBottom: 4,
+    textAlign: 'center',
     fontFamily: 'PlusJakartaSans-Bold',
   },
   cardDescription: {
     fontSize: 12.5,
-    color: '#5A738E',
+    color: '#64748B',
     lineHeight: 18,
     marginBottom: 16,
+    textAlign: 'center',
     fontFamily: 'PlusJakartaSans-Regular',
   },
   errorBox: {
+    width: '100%',
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FECACA',
@@ -203,30 +230,15 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 12,
     color: '#B91C1C',
-    fontFamily: 'PlusJakartaSans-Medium',
-  },
-  successBox: {
-    backgroundColor: '#EDFAF4',
-    borderWidth: 1,
-    borderColor: '#BCE8D3',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  successText: {
-    fontSize: 12,
-    color: '#0F8B66',
-    flex: 1,
+    textAlign: 'center',
     fontFamily: 'PlusJakartaSans-Medium',
   },
   submitButtonTouch: {
-    marginTop: 8,
+    width: '100%',
+    marginTop: 6,
     marginBottom: 14,
     borderRadius: 12,
-    shadowColor: '#07536D',
+    shadowColor: '#00446E',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.22,
     shadowRadius: 10,
@@ -264,7 +276,7 @@ const styles = StyleSheet.create({
   loginLink: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: '#07536D',
+    color: '#0D5C91',
     fontFamily: 'PlusJakartaSans-Bold',
   },
 });

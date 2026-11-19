@@ -3,16 +3,38 @@ import { Session, User } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { supabase } from '../services/supabase';
+import { mapSupabaseAuthError } from '../utils/authErrors';
 
 // Permite completar el flujo de autenticación al volver del navegador
 WebBrowser.maybeCompleteAuthSession();
 
-interface AuthContextType {
+export interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
-  signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithPassword: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string; isEmailNotConfirmed?: boolean }>;
+  signUpWithEmail: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<{ success: boolean; error?: string; session?: Session | null }>;
+  verifySignupOtp: (
+    email: string,
+    token: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  resendSignupOtp: (email: string) => Promise<{ success: boolean; error?: string }>;
+  sendPasswordResetOtp: (
+    email: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  verifyRecoveryOtp: (
+    email: string,
+    token: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   isInstitutional: boolean;
 }
@@ -23,6 +45,12 @@ const AuthContext = createContext<AuthContextType>({
   loading: false,
   signInWithGoogle: async () => ({ success: false }),
   signInWithPassword: async () => ({ success: false }),
+  signUpWithEmail: async () => ({ success: false }),
+  verifySignupOtp: async () => ({ success: false }),
+  resendSignupOtp: async () => ({ success: false }),
+  sendPasswordResetOtp: async () => ({ success: false }),
+  verifyRecoveryOtp: async () => ({ success: false }),
+  updatePassword: async () => ({ success: false }),
   signOut: async () => {},
   isInstitutional: false,
 });
@@ -88,15 +116,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error || !data?.url) {
         setLoading(false);
-        return { success: false, error: error?.message || 'No se pudo iniciar el flujo de Google.' };
+        return {
+          success: false,
+          error: mapSupabaseAuthError(error?.message || 'No se pudo iniciar el flujo de Google.'),
+        };
       }
 
       // Abrir navegador in-app para el login con Google
       const authResult = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
       if (authResult.type === 'success' && authResult.url) {
-        // Extraer tokens desde la URL de retorno
-        const parsedUrl = Linking.parse(authResult.url);
         const fragment = authResult.url.split('#')[1];
 
         if (fragment) {
@@ -112,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (sessionError) {
               setLoading(false);
-              return { success: false, error: sessionError.message };
+              return { success: false, error: mapSupabaseAuthError(sessionError.message) };
             }
 
             setSession(sessionData.session);
@@ -127,21 +156,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Inicio de sesión cancelado o no completado.' };
     } catch (err: any) {
       setLoading(false);
-      return { success: false, error: err?.message || 'Error inesperado durante la autenticación.' };
+      return {
+        success: false,
+        error: mapSupabaseAuthError(err?.message || 'Error inesperado durante la autenticación.'),
+      };
     }
   };
 
-  const signInWithPassword = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const signInWithPassword = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string; isEmailNotConfirmed?: boolean }> => {
     try {
       setLoading(true);
+      const cleanEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: cleanEmail,
         password,
       });
 
       if (error) {
         setLoading(false);
-        return { success: false, error: error.message };
+        const isEmailNotConfirmed = error.message.toLowerCase().includes('email not confirmed');
+        return {
+          success: false,
+          error: mapSupabaseAuthError(error.message),
+          isEmailNotConfirmed,
+        };
       }
 
       setSession(data.session);
@@ -150,7 +191,202 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true };
     } catch (err: any) {
       setLoading(false);
-      return { success: false, error: err?.message || 'Error al iniciar sesión con correo.' };
+      return {
+        success: false,
+        error: mapSupabaseAuthError(err?.message || 'Error al iniciar sesión con correo.'),
+      };
+    }
+  };
+
+  const signUpWithEmail = async (
+    email: string,
+    password: string,
+    fullName: string
+  ): Promise<{ success: boolean; error?: string; session?: Session | null }> => {
+    try {
+      setLoading(true);
+      const cleanEmail = email.trim().toLowerCase();
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            name: fullName.trim(),
+          },
+        },
+      });
+
+      if (error) {
+        setLoading(false);
+        return { success: false, error: mapSupabaseAuthError(error.message) };
+      }
+
+      // Si el email ya está confirmado o no requiere confirmación, la sesión viene en data.session
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+      }
+
+      setLoading(false);
+      return { success: true, session: data.session };
+    } catch (err: any) {
+      setLoading(false);
+      return {
+        success: false,
+        error: mapSupabaseAuthError(err?.message || 'Error al procesar el registro.'),
+      };
+    }
+  };
+
+  const verifySignupOtp = async (
+    email: string,
+    token: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanToken = token.trim();
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanToken,
+        type: 'signup',
+      });
+
+      if (error) {
+        // En algunas configuraciones de Supabase puede ser 'email' en vez de 'signup'
+        const fallback = await supabase.auth.verifyOtp({
+          email: cleanEmail,
+          token: cleanToken,
+          type: 'email',
+        });
+
+        if (fallback.error) {
+          setLoading(false);
+          return { success: false, error: mapSupabaseAuthError(fallback.error.message) };
+        }
+
+        setSession(fallback.data.session);
+        setUser(fallback.data.user);
+        setLoading(false);
+        return { success: true };
+      }
+
+      setSession(data.session);
+      setUser(data.user);
+      setLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setLoading(false);
+      return {
+        success: false,
+        error: mapSupabaseAuthError(err?.message || 'Error al verificar el código OTP.'),
+      };
+    }
+  };
+
+  const resendSignupOtp = async (
+    email: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: cleanEmail,
+      });
+
+      if (error) {
+        return { success: false, error: mapSupabaseAuthError(error.message) };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      return {
+        success: false,
+        error: mapSupabaseAuthError(err?.message || 'Error al reenviar el código.'),
+      };
+    }
+  };
+
+  const sendPasswordResetOtp = async (
+    email: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const cleanEmail = email.trim().toLowerCase();
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
+
+      setLoading(false);
+      if (error) {
+        return { success: false, error: mapSupabaseAuthError(error.message) };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      setLoading(false);
+      return {
+        success: false,
+        error: mapSupabaseAuthError(err?.message || 'Error al enviar código de recuperación.'),
+      };
+    }
+  };
+
+  const verifyRecoveryOtp = async (
+    email: string,
+    token: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanToken = token.trim();
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanToken,
+        type: 'recovery',
+      });
+
+      if (error) {
+        setLoading(false);
+        return { success: false, error: mapSupabaseAuthError(error.message) };
+      }
+
+      // Al verificar recovery, el usuario queda autenticado en sesión de recuperación
+      setSession(data.session);
+      setUser(data.user);
+      setLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setLoading(false);
+      return {
+        success: false,
+        error: mapSupabaseAuthError(err?.message || 'Error al verificar código de recuperación.'),
+      };
+    }
+  };
+
+  const updatePassword = async (
+    newPassword: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      setLoading(false);
+      if (error) {
+        return { success: false, error: mapSupabaseAuthError(error.message) };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      setLoading(false);
+      return {
+        success: false,
+        error: mapSupabaseAuthError(err?.message || 'Error al actualizar contraseña.'),
+      };
     }
   };
 
@@ -177,6 +413,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         signInWithGoogle,
         signInWithPassword,
+        signUpWithEmail,
+        verifySignupOtp,
+        resendSignupOtp,
+        sendPasswordResetOtp,
+        verifyRecoveryOtp,
+        updatePassword,
         signOut,
         isInstitutional,
       }}>
