@@ -4,32 +4,30 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
 
 ---
 
-### [2026-11-19] - Flujos Completos de Autenticación Blindados (Login, Registro con OTP y Recuperación de Contraseña)
+### [2026-11-19] - Flujos Completos de Autenticación Blindados, SMTP Transaccional Brevo y Blindaje de Navegación OTP
 * **Responsable:** Víctor Alexis & Asistente IA
 * **Fase:** Fase 2 (Frontend Móvil & Autenticación de Seguridad Clínica)
 
 #### ¿Qué se hizo?
-1. **Rediseño Fiel de la Pantalla de Login:**
+1. **Configuración de SMTP Transaccional con Brevo:**
+   - Se reemplazó el SMTP personal por Brevo Relay (`smtp-relay.brevo.com:587`), habilitando el envío confiable y sin bloqueos de correos transaccionales a cualquier dominio (Gmail, Outlook, `@alumnos.ulagos.cl`).
+2. **Blindaje de Redirección en Recuperación de Contraseña (`login.tsx`):**
+   - Se aisló el hook `useEffect` de `login.tsx` para que solo redirija al Home (`/`) si el usuario está físicamente en `/login` (`pathname === '/login'`), evitando que sesiones temporales de recuperación interrumpan la navegación hacia `/reset-password`.
+3. **Fijación Estricta de OTP a 6 Dígitos (`OtpInput.tsx` y `verify-otp.tsx`):**
+   - Se configuró la interfaz para 6 casilleros con espaciado ergonómico móvil (`codeLength = 6`), validación de longitud estricta y temporizador de reenvío.
+4. **Rediseño Fiel de la Pantalla de Login:**
    - Se removió cualquier distorsión visual de SVGs pesados que provocaban un anillo deformado en web.
    - Implementación pulcra según el diseño de referencia: Fondo níveo clínico (`#F3F7FC`) con orbes bioluminiscentes suaves, botón conmutador de tema (`🌙`), tipografía serif itálica `ClinicalCase` con destellos `✦`, tarjeta blanca con esquinas de 24px, botón oficial de Google (`#2563EB`), botón de inicio de sesión (`#0D5C91`), badge institucional y aviso de seguridad clínica cifrada.
-2. **Capa de Errores y Validaciones Blindadas (`src/utils/authErrors.ts`):**
+5. **Capa de Errores y Validaciones Blindadas (`src/utils/authErrors.ts`):**
    - Mapeo completo de errores de Supabase Auth a mensajes claros en español clínico.
    - Validador RFC 5322 para correos institucionales y personales.
    - Detección inteligente de `isEmailNotConfirmed` para redirigir directamente al OTP de activación si el usuario intenta acceder sin verificar su cuenta.
-3. **Componente Reutilizable OTP (`src/components/auth/OtpInput.tsx`):**
-   - 6 casilleros independientes visuales con resaltado dinámico de foco, soporte para pegado directo de código de 6 dígitos, autocompletado SMS/email nativo (`oneTimeCode`), soporte web/móvil y temporizador regresivo de reenvío (60 segundos).
-4. **Flujo de Registro con Verificación OTP (`src/app/register.tsx` y `src/app/verify-otp.tsx`):**
-   - Registro con `signUpWithEmail` y metadatos del profesional de salud.
-   - Envío automático de código OTP y transición inmediata a `/verify-otp?type=signup`.
-   - Confirmación mediante `supabase.auth.verifyOtp` y acceso automático a la app.
-5. **Flujo de Recuperación de Contraseña (`src/app/forgot-password.tsx`, `src/app/verify-otp.tsx` y `src/app/reset-password.tsx`):**
-   - Solicitud de código de seguridad con `supabase.auth.resetPasswordForEmail`.
-   - Verificación OTP con `type: 'recovery'`.
-   - Pantalla dedicada de cambio de clave (`reset-password.tsx`) con confirmación y ejecución de `supabase.auth.updateUser({ password })`.
-6. **Verificación Técnica:**
+6. **Flujo de Registro y Recuperación con Verificación OTP:**
+   - Soporte completo para registro y recuperación con OTP y actualización de contraseña.
+7. **Verificación Técnica:**
    - `tsc --noEmit` completado con 0 errores de tipado.
    - `npx expo export --platform web` generó exitosamente los 9 paquetes estáticos de rutas.
-   - Despliegue automático a GitHub y Vercel en la rama `main`.
+   - Despliegue automático a GitHub y Vercel en la rama `main` (commit `c944d`).
 
 ---
 
