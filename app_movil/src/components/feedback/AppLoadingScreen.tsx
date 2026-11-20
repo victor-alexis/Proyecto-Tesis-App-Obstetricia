@@ -55,7 +55,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({
 
         {/* Indicador de carga médica */}
         <View style={styles.loaderBox}>
-          <ActivityIndicator size="small" color="#0D5C91" />
+          <ActivityIndicator size={18} color="#0D5C91" />
           <Text style={styles.messageText}>{message}</Text>
         </View>
       </View>
@@ -67,10 +67,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F3F7FC',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   content: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
