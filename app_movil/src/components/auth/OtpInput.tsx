@@ -1,7 +1,9 @@
 /**
  * OtpInput.tsx
- * Componente especializado para ingreso de código OTP de 6 dígitos.
+ * Componente especializado para ingreso de código OTP de 6 dígitos con nivel médico Senior.
  * - Soporta autocompletado SMS/Email nativo (oneTimeCode).
+ * - Feedback Háptico táctil con expo-haptics (pulsos suaves al escribir, éxito y alerta de error).
+ * - Animación de sacudida (Shake) horizontal automática si el código es incorrecto, limpiando casilleros.
  * - Pegado (paste) automático en Web, iOS y Android.
  * - 6 casilleros visuales con resaltado dinámico de foco y estilo institucional ClinicalCase.
  * - Temporizador de enfriamiento regresivo (60s) para reenvío de código.
@@ -16,8 +18,11 @@ import {
   TouchableOpacity,
   Pressable,
   ActivityIndicator,
+  Animated,
+  Platform,
 } from 'react-native';
 import { RefreshCw, ArrowRight } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 
 interface OtpInputProps {
   codeLength?: number;
@@ -42,6 +47,40 @@ export const OtpInput: React.FC<OtpInputProps> = ({
   const [isResending, setIsResending] = useState(false);
   const inputRef = useRef<any>(null);
 
+  // Animación de sacudida (Shake) horizontal para código erróneo
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  // Manejador de feedback háptico seguro (sin fallar en web)
+  const triggerLightHaptic = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    }
+  };
+
+  const triggerErrorHaptic = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+    }
+  };
+
+  // Ejecutar shake y error háptico cuando surge un mensaje de error
+  useEffect(() => {
+    if (errorMessage) {
+      triggerErrorHaptic();
+      Animated.sequence([
+        Animated.timing(shakeAnim, { toValue: 12, duration: 45, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -12, duration: 45, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 8, duration: 45, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -8, duration: 45, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 4, duration: 45, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 0, duration: 45, useNativeDriver: true }),
+      ]).start(() => {
+        // Limpiar automáticamente los casilleros para permitir un nuevo intento limpio
+        setCode('');
+      });
+    }
+  }, [errorMessage, shakeAnim]);
+
   // Manejador del temporizador regresivo de reenvío
   useEffect(() => {
     if (timer <= 0) return;
@@ -52,9 +91,13 @@ export const OtpInput: React.FC<OtpInputProps> = ({
   }, [timer]);
 
   const handleTextChange = (text: string) => {
-    // Filtrar solo caracteres numéricos
     const cleaned = text.replace(/[^0-9]/g, '').slice(0, codeLength);
     setCode(cleaned);
+
+    // Feedback háptico suave por cada dígito tecleado
+    if (cleaned.length > code.length) {
+      triggerLightHaptic();
+    }
 
     if (cleaned.length === codeLength) {
       onCodeComplete(cleaned);
@@ -65,6 +108,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     if (timer > 0 || !onResendCode || isResending) return;
     try {
       setIsResending(true);
+      triggerLightHaptic();
       const ok = await onResendCode();
       if (ok) {
         setTimer(resendCooldownSeconds);
@@ -81,29 +125,31 @@ export const OtpInput: React.FC<OtpInputProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* ── Casilleros Visuales ── */}
-      <Pressable onPress={handleContainerPress} style={styles.slotsRow}>
-        {Array.from({ length: codeLength }).map((_, index) => {
-          const char = code[index] || '';
-          const isCurrent = index === code.length && isFocused;
-          const isFilled = Boolean(code[index]);
+      {/* ── Casilleros Visuales con Contenedor Shake ── */}
+      <Animated.View style={[styles.slotsContainer, { transform: [{ translateX: shakeAnim }] }]}>
+        <Pressable onPress={handleContainerPress} style={styles.slotsRow}>
+          {Array.from({ length: codeLength }).map((_, index) => {
+            const char = code[index] || '';
+            const isCurrent = index === code.length && isFocused;
+            const isFilled = Boolean(code[index]);
 
-          return (
-            <View
-              key={index}
-              style={[
-                styles.slot,
-                isCurrent && styles.slotFocused,
-                isFilled && styles.slotFilled,
-                Boolean(errorMessage) && styles.slotError,
-              ]}
-            >
-              <Text style={styles.slotText}>{char}</Text>
-              {isCurrent && <View style={styles.cursor} />}
-            </View>
-          );
-        })}
-      </Pressable>
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.slot,
+                  isCurrent && styles.slotFocused,
+                  isFilled && styles.slotFilled,
+                  Boolean(errorMessage) && styles.slotError,
+                ]}
+              >
+                <Text style={styles.slotText}>{char}</Text>
+                {isCurrent && <View style={styles.cursor} />}
+              </View>
+            );
+          })}
+        </Pressable>
+      </Animated.View>
 
       {/* ── Input Real (Cubre el área de casilleros con opacidad mínima para activar QuickType / Autofill nativo) ── */}
       <TextInput
@@ -185,6 +231,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     marginBottom: 4,
+    position: 'relative',
+  },
+  slotsContainer: {
+    width: '100%',
   },
   slotsRow: {
     flexDirection: 'row',

@@ -26,12 +26,24 @@ import {
 } from '@/components/auth';
 import { useAuth } from '@/context/AuthContext';
 import { isValidEmail } from '@/utils/authErrors';
+import { BiometricsService } from '@/services/biometrics';
+import * as Haptics from 'expo-haptics';
 
 export default function LoginScreen() {
   const { signInWithGoogle, signInWithPassword, session } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [biometricType, setBiometricType] = useState<string | null>(null);
   const pathname = usePathname();
+
+  // Detección de disponibilidad biométrica (Face ID / Huella) en dispositivo nativo
+  useEffect(() => {
+    BiometricsService.isAvailable().then((available) => {
+      if (available) {
+        BiometricsService.getBiometryTypeName().then(setBiometricType);
+      }
+    });
+  }, []);
 
   // Redirigir al inicio ÚNICAMENTE si ya hay sesión autenticada activa y el usuario está efectivamente en /login
   // Esto evita que interrumpa flujos en segundo plano como recuperación de contraseña (/verify-otp -> /reset-password)
@@ -40,6 +52,19 @@ export default function LoginScreen() {
       router.replace('/');
     }
   }, [session, pathname]);
+
+  const handleBiometricLogin = async () => {
+    setErrorMessage(null);
+    const success = await BiometricsService.authenticate(
+      `Confirma tu ${biometricType || 'identidad'} para acceder a ClinicalCase`
+    );
+    if (success) {
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
+      router.replace('/');
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setErrorMessage(null);
@@ -122,6 +147,8 @@ export default function LoginScreen() {
             <LoginCard
               onGoogleLogin={handleGoogleLogin}
               onEmailLogin={handleEmailLogin}
+              onBiometricLogin={handleBiometricLogin}
+              biometricType={biometricType}
               loading={loading}
               errorMessage={errorMessage}
             />

@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MailCheck } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 
 import {
   LoginBackground,
@@ -64,6 +65,10 @@ export default function VerifyOtpScreen() {
           return;
         }
 
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        }
+
         // Navegar a la pantalla para ingresar la nueva contraseña
         router.replace('/reset-password');
       } else {
@@ -72,6 +77,10 @@ export default function VerifyOtpScreen() {
         if (!result.success) {
           setErrorMessage(result.error || 'Código incorrecto o expirado.');
           return;
+        }
+
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         }
 
         // Cuenta confirmada con éxito, ingresar al Home

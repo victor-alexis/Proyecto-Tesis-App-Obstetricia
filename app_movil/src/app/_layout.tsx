@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { AppLoadingScreen } from '@/components/feedback';
+import { AppLoadingScreen, OfflineBanner } from '@/components/feedback';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -38,6 +38,7 @@ function RootNavigator() {
   return (
     <>
       <StatusBar style="dark" />
+      <OfflineBanner />
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(app)" options={{ headerShown: false }} />

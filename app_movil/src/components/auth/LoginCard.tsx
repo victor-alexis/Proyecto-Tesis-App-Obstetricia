@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, Check } from 'lucide-react-native';
+import { ArrowRight, Check, Fingerprint } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { GoogleButton } from './GoogleButton';
@@ -23,6 +23,8 @@ import { AuthInput } from './AuthInput';
 interface LoginCardProps {
   onGoogleLogin: () => void;
   onEmailLogin: (email: string, pass: string) => void;
+  onBiometricLogin?: () => void;
+  biometricType?: string | null;
   loading: boolean;
   errorMessage: string | null;
 }
@@ -30,6 +32,8 @@ interface LoginCardProps {
 export const LoginCard: React.FC<LoginCardProps> = ({
   onGoogleLogin,
   onEmailLogin,
+  onBiometricLogin,
+  biometricType,
   loading,
   errorMessage,
 }) => {
@@ -112,6 +116,19 @@ export const LoginCard: React.FC<LoginCardProps> = ({
           )}
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* ── Botón de Acceso Biométrico Rápido (Face ID / Huella si está soportado) ── */}
+      {Boolean(biometricType) && onBiometricLogin && (
+        <TouchableOpacity
+          style={styles.biometricBtnTouch}
+          onPress={onBiometricLogin}
+          disabled={loading}
+          activeOpacity={0.8}
+        >
+          <Fingerprint size={16} color="#0D5C91" style={{ marginRight: 8 }} />
+          <Text style={styles.biometricBtnText}>Ingreso con {biometricType}</Text>
+        </TouchableOpacity>
+      )}
 
       {/* ── Franja de Cuentas Soportadas ── */}
       <View style={styles.badgeContainer}>
@@ -231,6 +248,23 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.7,
+  },
+  biometricBtnTouch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    marginBottom: 14,
+  },
+  biometricBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0D5C91',
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   badgeContainer: {
     backgroundColor: '#ECFDF5',
