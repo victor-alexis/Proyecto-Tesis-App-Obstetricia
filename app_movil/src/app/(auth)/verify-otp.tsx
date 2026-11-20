@@ -13,7 +13,6 @@ import {
   Text,
   TouchableOpacity,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -124,12 +123,8 @@ export default function VerifyOtpScreen() {
       <LoginBackground />
 
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'height' : undefined}
-          style={styles.keyboardContainer}
-        >
-          <View style={styles.scrollContent}>
-            <LoginBrand />
+        <View style={styles.scrollContent}>
+          <LoginBrand />
 
             {/* ── Tarjeta de Verificación OTP ── */}
             <View style={styles.card}>
@@ -184,11 +179,10 @@ export default function VerifyOtpScreen() {
 
             <LoginFooter />
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
-  );
-}
+        </SafeAreaView>
+      </View>
+    );
+  }
 
 const styles = StyleSheet.create({
   container: {
@@ -196,9 +190,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F7FC',
   },
   safeArea: {
-    flex: 1,
-  },
-  keyboardContainer: {
     flex: 1,
   },
   scrollContent: {

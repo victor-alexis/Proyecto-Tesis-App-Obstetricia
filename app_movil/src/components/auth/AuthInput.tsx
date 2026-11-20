@@ -12,6 +12,7 @@ import {
   TextInput,
   TouchableOpacity,
   TextInputProps,
+  Platform,
 } from 'react-native';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
@@ -144,11 +145,12 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 13,
+    fontSize: Platform.OS === 'web' ? 16 : 13.5,
     color: '#1E293B',
     fontFamily: 'PlusJakartaSans-Regular',
     paddingVertical: 0,
     height: '100%',
+    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {}),
   },
   inputWithEye: {
     paddingRight: 28,

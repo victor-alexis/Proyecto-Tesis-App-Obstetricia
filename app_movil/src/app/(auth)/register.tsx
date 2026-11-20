@@ -11,9 +11,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -88,19 +85,8 @@ export default function RegisterScreen() {
     <View style={styles.container}>
       <LoginBackground />
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'height' : undefined}
-          style={styles.keyboardContainer}
-        >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-            bounces={false}
-            overScrollMode="never"
-            keyboardShouldPersistTaps="handled"
-          >
-            <LoginBrand />
+        <View style={styles.scrollContent}>
+          <LoginBrand />
 
             {/* ── Tarjeta de Registro ── */}
             <View style={styles.card}>
@@ -183,12 +169,11 @@ export default function RegisterScreen() {
             </View>
 
             <LoginFooter />
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
-  );
-}
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
 const styles = StyleSheet.create({
   container: {
@@ -198,17 +183,15 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  keyboardContainer: {
-    flex: 1,
-  },
   scrollContent: {
+    flex: 1,
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 24,
     maxWidth: 420,
     width: '100%',
     alignSelf: 'center',
-    flexGrow: 1,
+    justifyContent: 'center',
   },
   card: {
     backgroundColor: '#FFFFFF',

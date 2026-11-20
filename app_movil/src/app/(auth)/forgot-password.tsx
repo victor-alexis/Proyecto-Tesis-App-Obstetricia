@@ -11,7 +11,6 @@ import {
   Text,
   TouchableOpacity,
   Platform,
-  KeyboardAvoidingView,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -71,12 +70,8 @@ export default function ForgotPasswordScreen() {
     <View style={styles.container}>
       <LoginBackground />
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'height' : undefined}
-          style={styles.keyboardContainer}
-        >
-          <View style={styles.scrollContent}>
-            <LoginBrand />
+        <View style={styles.scrollContent}>
+          <LoginBrand />
 
             {/* ── Tarjeta de Recuperación ── */}
             <View style={styles.card}>
@@ -144,11 +139,10 @@ export default function ForgotPasswordScreen() {
 
             <LoginFooter />
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
-  );
-}
+        </SafeAreaView>
+      </View>
+    );
+  }
 
 const styles = StyleSheet.create({
   container: {
@@ -156,9 +150,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F7FC',
   },
   safeArea: {
-    flex: 1,
-  },
-  keyboardContainer: {
     flex: 1,
   },
   scrollContent: {

@@ -12,7 +12,6 @@ import {
   View,
   StatusBar,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, usePathname } from 'expo-router';
@@ -127,29 +126,23 @@ export default function LoginScreen() {
       <LoginBackground />
 
       <SafeAreaView style={styles.safeArea}>
-        {/* KeyboardAvoidingView solo ajusta altura (no hace scroll) en iOS */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'height' : undefined}
-          style={styles.keyboardContainer}
-        >
-          <View style={styles.scrollContent}>
-            {/* ── Encabezado: ClinicalCase + Subtítulo ── */}
-            <LoginBrand />
+        <View style={styles.scrollContent}>
+          {/* ── Encabezado: ClinicalCase + Subtítulo ── */}
+          <LoginBrand />
 
-            {/* ── Tarjeta Blanca de Autenticación ── */}
-            <LoginCard
-              onGoogleLogin={handleGoogleLogin}
-              onEmailLogin={handleEmailLogin}
-              onBiometricLogin={handleBiometricLogin}
-              biometricType={biometricType}
-              loading={loading}
-              errorMessage={errorMessage}
-            />
+          {/* ── Tarjeta Blanca de Autenticación ── */}
+          <LoginCard
+            onGoogleLogin={handleGoogleLogin}
+            onEmailLogin={handleEmailLogin}
+            onBiometricLogin={handleBiometricLogin}
+            biometricType={biometricType}
+            loading={loading}
+            errorMessage={errorMessage}
+          />
 
-            {/* ── Pie de Página: Aviso de Seguridad + Créditos ── */}
-            <LoginFooter />
-          </View>
-        </KeyboardAvoidingView>
+          {/* ── Pie de Página: Aviso de Seguridad + Créditos ── */}
+          <LoginFooter />
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -161,9 +154,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F7FC',
   },
   safeArea: {
-    flex: 1,
-  },
-  keyboardContainer: {
     flex: 1,
   },
   scrollContent: {

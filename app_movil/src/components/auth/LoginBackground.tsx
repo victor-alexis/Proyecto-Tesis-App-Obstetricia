@@ -10,7 +10,7 @@ import { StyleSheet, View } from 'react-native';
 
 export const LoginBackground: React.FC = () => {
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden' }]}>
       {/* ── Lienzo Base Clínico Níveo ── */}
       <View style={styles.baseCanvas} />
 

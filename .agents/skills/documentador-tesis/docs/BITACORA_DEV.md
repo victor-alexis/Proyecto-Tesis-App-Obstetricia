@@ -4,6 +4,29 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
 
 ---
 
+### [2026-11-20] - Blindaje Absoluto Anti-Zoom y Fijación de Pantalla sin +html.tsx
+* **Responsable:** Víctor Alexis & Asistente IA
+* **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX)
+
+#### ¿Qué se hizo?
+1. **Fijación Absoluta de Pantalla en Web (Client-Side, sin `+html.tsx`):**
+   - Implementado en `RootNavigator` (`app/_layout.tsx`) un efecto dinámico que opera exclusivamente en `Platform.OS === 'web'`:
+     - Configura el meta viewport: `user-scalable=no, maximum-scale=1, minimum-scale=1, viewport-fit=cover`.
+     - Anula eventos de gestos táctiles de zoom (`gesturestart`, `gesturechange`, `gestureend`, `touchstart` multitáctil).
+     - Inyecta estilos web estrictos: `html, body, #root { overflow: hidden !important; height: 100% !important; width: 100% !important; position: fixed !important; touch-action: manipulation !important; }`.
+     - Neutraliza el desplazamiento de ventana (`window.scrollTo(0, 0)`) ante la aparición del teclado virtual.
+2. **Neutralización del Auto-Zoom de iOS Safari / Chrome en Inputs:**
+   - En `AuthInput.tsx` se configuró `fontSize: Platform.OS === 'web' ? 16 : 13.5`. Al tener 16px en web, los navegadores móviles ya no realizan el zoom intrusivo hacia el campo al hacer foco.
+3. **Contención de Orbes en Fondo Clínico:**
+   - En `LoginBackground.tsx` se agregó `overflow: 'hidden'`, conteniendo los orbes difusos que sobresalían 70px por la derecha y provocaban scroll horizontal.
+4. **Eliminación Total de `KeyboardAvoidingView` en Pantallas de Acceso:**
+   - Removido `KeyboardAvoidingView` de `login.tsx`, `forgot-password.tsx`, `verify-otp.tsx`, `reset-password.tsx` y `register.tsx`. La pantalla permanece 100% estática e inamovible cuando el teclado entra o sale de la vista.
+5. **Verificación:**
+   - 0 errores en `tsc --noEmit`.
+   - 16 rutas estáticas compiladas exitosamente con `expo export --platform web`.
+
+---
+
 ### [2026-11-20] - Corrección de Redirección OTP en Recuperación y Registro
 * **Responsable:** Víctor Alexis & Asistente IA
 * **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX) / Fase 3 (Seguridad)
