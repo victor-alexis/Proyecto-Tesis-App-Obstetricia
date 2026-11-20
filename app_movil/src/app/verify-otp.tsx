@@ -47,8 +47,8 @@ export default function VerifyOtpScreen() {
   const isRecovery = type === 'recovery';
 
   const handleVerifyCode = async (code: string) => {
-    if (code.length < 8) {
-      setErrorMessage('Por favor ingresa los 8 dígitos completos del código.');
+    if (code.length < 6) {
+      setErrorMessage('Por favor ingresa los 6 dígitos completos del código.');
       return;
     }
 
@@ -135,7 +135,7 @@ export default function VerifyOtpScreen() {
 
               <Text style={styles.cardTitle}>Verificación Requerida</Text>
               <Text style={styles.cardDescription}>
-                Hemos enviado un código de 8 dígitos a:{'\n'}
+                Hemos enviado un código de 6 dígitos a:{'\n'}
                 <Text style={styles.emailHighlight}>{email || 'tu correo'}</Text>
               </Text>
 
@@ -146,9 +146,9 @@ export default function VerifyOtpScreen() {
                 </View>
               )}
 
-              {/* ── Componente OTP con 8 casilleros y timer ── */}
+              {/* ── Componente OTP con 6 casilleros y timer ── */}
               <OtpInput
-                codeLength={8}
+                codeLength={6}
                 onCodeComplete={handleVerifyCode}
                 onResendCode={handleResend}
                 loading={loading}
