@@ -4,6 +4,22 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
 
 ---
 
+### [2026-11-20] - Corrección de Redirección OTP en Recuperación y Registro
+* **Responsable:** Víctor Alexis & Asistente IA
+* **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX) / Fase 3 (Seguridad)
+
+#### ¿Qué se hizo?
+1. **Eliminación de `setLoading` Global Invasivo en `AuthContext`:**
+   - Se detectó que métodos como `sendPasswordResetOtp` y `signUpWithEmail` alteraban el flag global `loading: true` en `AuthContext`.
+   - Esto disparaba la condición `if (loading) return <AppLoadingScreen />` en `RootNavigator` (`app/_layout.tsx`), desmontando por completo la pila de navegación (`<Stack>`) en medio de la operación.
+   - Al desmontarse el componente que ejecutaba la petición, la instrucción `router.push({ pathname: '/verify-otp', ... })` quedaba huérfana o era pisada por el remontaje de la pila en su ruta raíz, bloqueando la llegada a la pantalla de ingreso de código de 6 dígitos.
+   - Se restringió `loading` única y exclusivamente a la verificación inicial de sesión al arrancar la app (`getSession`), permitiendo que el estado de carga visual sea manejado localmente por los botones de cada pantalla sin desarmar el árbol de navegación.
+2. **Verificación:**
+   - 0 errores de tipado con `tsc --noEmit`.
+   - Exportación web estática (`expo export --platform web`) exitosa con las 16 rutas operativas.
+
+---
+
 ### [2026-11-20] - Restauración del Pipeline Web y Corrección de AppLoadingScreen
 * **Responsable:** Víctor Alexis & Asistente IA
 * **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX)

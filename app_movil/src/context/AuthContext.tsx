@@ -11,9 +11,9 @@ WebBrowser.maybeCompleteAuthSession();
 export interface AuthContextType {
   session: Session | null;
   user: User | null;
+  /** loading: Solo true durante el arranque inicial de la app mientras verifica credenciales guardadas */
   loading: boolean;
-  /** true mientras el usuario está en el flujo forgot → verify-otp → reset-password.
-   *  Permite al guardián de (app)/_layout.tsx no forzar /login durante este proceso. */
+  /** isRecovering: true mientras el usuario está en el flujo forgot → verify-otp → reset-password */
   isRecovering: boolean;
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signInWithPassword: (
@@ -64,9 +64,10 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  // loading solo representa la comprobación inicial al abrir la app.
+  // NUNCA debe alternarse durante acciones del usuario (login, registro, recuperación)
+  // para evitar que RootNavigator desmonte el árbol de navegación.
   const [loading, setLoading] = useState(true);
-  // isRecovering: true desde que se solicita reset OTP hasta que la nueva contraseña se aplica.
-  // Evita que el guardián de (app)/_layout.tsx redirija al login durante el flujo de recovery.
   const [isRecovering, setIsRecovering] = useState(false);
 
   useEffect(() => {
@@ -106,7 +107,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
     try {
-      setLoading(true);
       const redirectUrl = Linking.createURL('login');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -122,7 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error || !data?.url) {
-        setLoading(false);
         return {
           success: false,
           error: mapSupabaseAuthError(error?.message || 'No se pudo iniciar el flujo de Google.'),
@@ -147,22 +146,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
 
             if (sessionError) {
-              setLoading(false);
               return { success: false, error: mapSupabaseAuthError(sessionError.message) };
             }
 
             setSession(sessionData.session);
             setUser(sessionData.user);
-            setLoading(false);
             return { success: true };
           }
         }
       }
 
-      setLoading(false);
       return { success: false, error: 'Inicio de sesión cancelado o no completado.' };
     } catch (err: any) {
-      setLoading(false);
       return {
         success: false,
         error: mapSupabaseAuthError(err?.message || 'Error inesperado durante la autenticación.'),
@@ -175,7 +170,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string
   ): Promise<{ success: boolean; error?: string; isEmailNotConfirmed?: boolean }> => {
     try {
-      setLoading(true);
       const cleanEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
@@ -183,7 +177,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        setLoading(false);
         const isEmailNotConfirmed = error.message.toLowerCase().includes('email not confirmed');
         return {
           success: false,
@@ -194,10 +187,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setSession(data.session);
       setUser(data.user);
-      setLoading(false);
       return { success: true };
     } catch (err: any) {
-      setLoading(false);
       return {
         success: false,
         error: mapSupabaseAuthError(err?.message || 'Error al iniciar sesión con correo.'),
@@ -211,7 +202,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName: string
   ): Promise<{ success: boolean; error?: string; session?: Session | null }> => {
     try {
-      setLoading(true);
       const cleanEmail = email.trim().toLowerCase();
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -225,7 +215,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        setLoading(false);
         return { success: false, error: mapSupabaseAuthError(error.message) };
       }
 
@@ -235,10 +224,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(data.user);
       }
 
-      setLoading(false);
       return { success: true, session: data.session };
     } catch (err: any) {
-      setLoading(false);
       return {
         success: false,
         error: mapSupabaseAuthError(err?.message || 'Error al procesar el registro.'),
@@ -251,7 +238,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     token: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      setLoading(true);
       const cleanEmail = email.trim().toLowerCase();
       const cleanToken = token.trim();
 
@@ -270,22 +256,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (fallback.error) {
-          setLoading(false);
           return { success: false, error: mapSupabaseAuthError(fallback.error.message) };
         }
 
         setSession(fallback.data.session);
         setUser(fallback.data.user);
-        setLoading(false);
         return { success: true };
       }
 
       setSession(data.session);
       setUser(data.user);
-      setLoading(false);
       return { success: true };
     } catch (err: any) {
-      setLoading(false);
       return {
         success: false,
         error: mapSupabaseAuthError(err?.message || 'Error al verificar el código OTP.'),
@@ -320,11 +302,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      setLoading(true);
       const cleanEmail = email.trim().toLowerCase();
       const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
 
-      setLoading(false);
       if (error) {
         return { success: false, error: mapSupabaseAuthError(error.message) };
       }
@@ -333,7 +313,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsRecovering(true);
       return { success: true };
     } catch (err: any) {
-      setLoading(false);
       return {
         success: false,
         error: mapSupabaseAuthError(err?.message || 'Error al enviar código de recuperación.'),
@@ -346,7 +325,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     token: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      setLoading(true);
       const cleanEmail = email.trim().toLowerCase();
       const cleanToken = token.trim();
 
@@ -357,7 +335,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        setLoading(false);
         return { success: false, error: mapSupabaseAuthError(error.message) };
       }
 
@@ -365,10 +342,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // isRecovering permanece true hasta que updatePassword finalice
       setSession(data.session);
       setUser(data.user);
-      setLoading(false);
       return { success: true };
     } catch (err: any) {
-      setLoading(false);
       return {
         success: false,
         error: mapSupabaseAuthError(err?.message || 'Error al verificar código de recuperación.'),
@@ -380,12 +355,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     newPassword: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      setLoading(true);
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
-      setLoading(false);
       if (error) {
         return { success: false, error: mapSupabaseAuthError(error.message) };
       }
@@ -394,7 +367,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsRecovering(false);
       return { success: true };
     } catch (err: any) {
-      setLoading(false);
       return {
         success: false,
         error: mapSupabaseAuthError(err?.message || 'Error al actualizar contraseña.'),
@@ -403,11 +375,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    setLoading(true);
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
-    setLoading(false);
   };
 
   const email = user?.email || '';
