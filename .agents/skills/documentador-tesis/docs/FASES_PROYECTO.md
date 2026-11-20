@@ -53,6 +53,16 @@
   - Reescritas pantallas: `login.tsx`, `register.tsx`, `forgot-password.tsx`.
   - Nuevas pantallas: `verify-otp.tsx` (flujo unificado signup/recovery) y `reset-password.tsx`.
   - Build exportado con 0 errores TypeScript. Deploy en Vercel activo.
+- [x] **Paso 2.5.1: Pulido de Percepción de Calidad y UI/UX Senior (2026-11-20):**
+  - Redirección directa al panel clínico (`/`) tras restablecer contraseña (sin forzar re-login innecesario).
+  - Eliminación de rebote y scrolls no deseados (`bounces={false}`, `overScrollMode="never"`, `showsHorizontalScrollIndicator={false}`).
+  - Pantalla Edge-to-Edge 100% en iOS/Android eliminando franjas blancas en la barra de estado.
+  - Overhaul de `OtpInput.tsx`: caja de entrada nativa visible para motores QuickType de iOS y Android Autofill.
+  - Creación de `AppLoadingScreen.tsx` y configuración de tema clínico permanente `#F3F7FC` para erradicar parpadeos negros en transiciones.
+- [ ] **[PENDIENTE] Paso 2.5.2: Splash Screen Animado y Feedback Háptico:**
+  - Componente `AnimatedSplashScreen.tsx` con escala, fade y resplandor bioluminiscente antes del Login.
+  - Integración de `expo-haptics` para feedback táctil en casilleros OTP, éxito y sacudida de error (*shake*).
+  - Persistencia biométrica opcional (FaceID / Fingerprint con `expo-local-authentication`).
 - [x] **Paso 2.6: SMTP Gmail para OTP en desarrollo (2026-11-19):**
   - Configurado Gmail SMTP en Supabase con `victoralexis.chile@gmail.com` + App Password.
   - Permite enviar OTPs a **cualquier correo** sin restricciones de dominio.

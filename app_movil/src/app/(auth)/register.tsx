@@ -95,6 +95,9 @@ export default function RegisterScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
             keyboardShouldPersistTaps="handled"
           >
             <LoginBrand />

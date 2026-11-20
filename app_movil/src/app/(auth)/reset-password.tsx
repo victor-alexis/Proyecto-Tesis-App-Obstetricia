@@ -64,10 +64,10 @@ export default function ResetPasswordScreen() {
       }
 
       setSuccess(true);
-      // Redirigir al inicio de sesión tras 1.5 segundos para que aprecie el éxito
+      // Redirigir directamente al panel clínico principal (el usuario ya queda autenticado por Supabase)
       setTimeout(() => {
-        router.replace('/login');
-      }, 1500);
+        router.replace('/');
+      }, 1200);
     } catch (err: any) {
       setErrorMessage(err?.message || 'Error inesperado al cambiar contraseña.');
     } finally {
@@ -87,6 +87,9 @@ export default function ResetPasswordScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
             keyboardShouldPersistTaps="handled"
           >
             <LoginBrand />
@@ -114,7 +117,7 @@ export default function ResetPasswordScreen() {
                 <View style={styles.successBox}>
                   <CheckCircle2 size={18} color="#047857" style={{ marginRight: 8 }} />
                   <Text style={styles.successText}>
-                    ¡Contraseña actualizada con éxito! Redirigiendo...
+                    ¡Contraseña actualizada con éxito! Ingresando a tu panel clínico...
                   </Text>
                 </View>
               )}

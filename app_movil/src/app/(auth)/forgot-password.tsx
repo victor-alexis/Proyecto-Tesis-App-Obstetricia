@@ -79,6 +79,9 @@ export default function ForgotPasswordScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
             keyboardShouldPersistTaps="handled"
           >
             <LoginBrand />

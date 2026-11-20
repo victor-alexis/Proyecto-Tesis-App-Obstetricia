@@ -105,7 +105,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
         })}
       </Pressable>
 
-      {/* ── Input Real Invisible (Soporta autofill, pegado y teclado numérico) ── */}
+      {/* ── Input Real (Cubre el área de casilleros con opacidad mínima para activar QuickType / Autofill nativo) ── */}
       <TextInput
         ref={inputRef}
         value={code}
@@ -238,9 +238,12 @@ const styles = StyleSheet.create({
   },
   hiddenInput: {
     position: 'absolute',
-    width: 1,
-    height: 1,
-    opacity: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 52,
+    opacity: 0.01,
+    color: 'transparent',
   },
   errorBox: {
     width: '100%',

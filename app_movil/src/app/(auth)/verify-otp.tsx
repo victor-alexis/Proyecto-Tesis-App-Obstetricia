@@ -123,6 +123,9 @@ export default function VerifyOtpScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
             keyboardShouldPersistTaps="handled"
           >
             <LoginBrand />

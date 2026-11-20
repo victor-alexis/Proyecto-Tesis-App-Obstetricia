@@ -110,6 +110,9 @@ export default function LoginScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
             keyboardShouldPersistTaps="handled"
           >
             {/* ── Encabezado: ClinicalCase + Subtítulo ── */}
