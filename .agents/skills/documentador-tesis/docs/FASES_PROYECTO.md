@@ -59,10 +59,13 @@
   - Pantalla Edge-to-Edge 100% en iOS/Android eliminando franjas blancas en la barra de estado.
   - Overhaul de `OtpInput.tsx`: caja de entrada nativa visible para motores QuickType de iOS y Android Autofill.
   - Creación de `AppLoadingScreen.tsx` y configuración de tema clínico permanente `#F3F7FC` para erradicar parpadeos negros en transiciones.
-- [ ] **[PENDIENTE] Paso 2.5.2: Splash Screen Animado y Feedback Háptico:**
-  - Componente `AnimatedSplashScreen.tsx` con escala, fade y resplandor bioluminiscente antes del Login.
-  - Integración de `expo-haptics` para feedback táctil en casilleros OTP, éxito y sacudida de error (*shake*).
-  - Persistencia biométrica opcional (FaceID / Fingerprint con `expo-local-authentication`).
+- [x] **Paso 2.5.2: Calidad Top-Tier: Haptics, Shake OTP, Biometría y Banner Offline (2026-11-20):**
+  - Feedback háptico táctil suave (`expo-haptics`) al teclear en casilleros OTP y notificación de éxito al verificar.
+  - Animación de sacudida (*shake*) con doble pulso háptico de error y vaciado automático de casilleros si el código es incorrecto.
+  - Servicio de biometría nativa `BiometricsService` (`expo-local-authentication`) con soporte para Face ID / Huella dactilar.
+  - Detección de conectividad con `OfflineBanner` flotante animado para centros de salud con baja recepción.
+- [ ] **[PENDIENTE] Paso 2.5.3: Splash Screen Animado:**
+  - Componente `AnimatedSplashScreen.tsx` con escala, fade y resplandor bioluminiscente antes de mostrar la pantalla de Login.
 - [x] **Paso 2.6: SMTP Gmail para OTP en desarrollo (2026-11-19):**
   - Configurado Gmail SMTP en Supabase con `victoralexis.chile@gmail.com` + App Password.
   - Permite enviar OTPs a **cualquier correo** sin restricciones de dominio.
