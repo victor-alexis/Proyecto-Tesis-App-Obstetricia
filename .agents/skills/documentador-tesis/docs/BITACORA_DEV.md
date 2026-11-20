@@ -4,6 +4,21 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
 
 ---
 
+### [2026-11-20] - Restauración del Pipeline Web y Corrección de AppLoadingScreen
+* **Responsable:** Víctor Alexis & Asistente IA
+* **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX)
+
+#### ¿Qué se hizo?
+1. **Eliminación de `+html.tsx`:**
+   - La plantilla personalizada `+html.tsx` suprimía inadvertidamente la inyección automática de los bundles JS (`<script defer>`) y hojas de estilo de React Native Web durante la exportación estática de Expo Router. Esto dejaba al navegador con HTML crudo y congelado en el estado de carga.
+   - Al remover dicho archivo, Expo Router restableció la inyección completa de scripts (`__expo-metro-runtime`, `entry`, layouts y páginas) y la hoja de estilos React Native completa.
+2. **Dimensionamiento Controlado de `ActivityIndicator`:**
+   - En `AppLoadingScreen.tsx` se fijó `size={18}` explícito y `flex: 1` en el contenedor `content`, garantizando centrado vertical y evitando la expansión desmedida del SVG del spinner en navegadores web.
+3. **Verificación:**
+   - Exportación de 16 rutas estáticas completas (31KB por ruta, incluyendo scripts de hidratación y hojas de estilo).
+
+---
+
 ### [2026-11-20] - Erradicación de Zoom/Scroll en Inputs y Blindaje Total del Flujo OTP de Recuperación
 * **Responsable:** Víctor Alexis & Asistente IA
 * **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX) / Fase 3 (Seguridad)
