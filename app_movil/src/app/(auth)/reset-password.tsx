@@ -1,7 +1,7 @@
 /**
- * forgot-password.tsx
- * Pantalla de Recuperación de Contraseña de ClinicalCase.
- * Envía un código OTP de recuperación de 6 dígitos mediante Supabase Auth.
+ * reset-password.tsx
+ * Pantalla para definir la nueva contraseña tras verificar el código de recuperación.
+ * Invoca supabase.auth.updateUser({ password }) y asegura el cambio de clave.
  */
 
 import React, { useState } from 'react';
@@ -17,28 +17,38 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, KeyRound } from 'lucide-react-native';
+import { ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react-native';
 import { router } from 'expo-router';
 
-import { LoginBackground, LoginBrand, AuthInput, LoginFooter } from '../components/auth';
-import { useAuth } from '../context/AuthContext';
-import { isValidEmail } from '../utils/authErrors';
+import {
+  LoginBackground,
+  LoginBrand,
+  AuthInput,
+  LoginFooter,
+} from '@/components/auth';
+import { useAuth } from '@/context/AuthContext';
 
-export default function ForgotPasswordScreen() {
-  const { sendPasswordResetOtp } = useAuth();
-  const [email, setEmail] = useState('');
+export default function ResetPasswordScreen() {
+  const { updatePassword } = useAuth();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  const handleResetPassword = async () => {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      setErrorMessage('Por favor ingresa tu correo institucional o personal.');
+  const handleUpdate = async () => {
+    if (!newPassword || !confirmPassword) {
+      setErrorMessage('Por favor completa ambos campos.');
       return;
     }
 
-    if (!isValidEmail(trimmedEmail)) {
-      setErrorMessage('Por favor ingresa un formato de correo electrónico válido.');
+    if (newPassword.length < 6) {
+      setErrorMessage('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrorMessage('Las contraseñas no coinciden. Por favor verifícalas.');
       return;
     }
 
@@ -46,23 +56,20 @@ export default function ForgotPasswordScreen() {
       setLoading(true);
       setErrorMessage(null);
 
-      const result = await sendPasswordResetOtp(trimmedEmail);
+      const result = await updatePassword(newPassword);
 
       if (!result.success) {
-        setErrorMessage(result.error || 'Error al procesar la solicitud.');
+        setErrorMessage(result.error || 'No se pudo actualizar la contraseña.');
         return;
       }
 
-      // Redirigir a la pantalla de verificación OTP para recuperación
-      router.push({
-        pathname: '/verify-otp',
-        params: {
-          email: trimmedEmail,
-          type: 'recovery',
-        },
-      } as any);
+      setSuccess(true);
+      // Redirigir al inicio de sesión tras 1.5 segundos para que aprecie el éxito
+      setTimeout(() => {
+        router.replace('/login');
+      }, 1500);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Error inesperado al solicitar el código.');
+      setErrorMessage(err?.message || 'Error inesperado al cambiar contraseña.');
     } finally {
       setLoading(false);
     }
@@ -71,6 +78,7 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={styles.container}>
       <LoginBackground />
+
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -83,15 +91,15 @@ export default function ForgotPasswordScreen() {
           >
             <LoginBrand />
 
-            {/* ── Tarjeta de Recuperación ── */}
+            {/* ── Tarjeta de Nueva Contraseña ── */}
             <View style={styles.card}>
               <View style={styles.iconCircle}>
-                <KeyRound size={26} color="#2563EB" />
+                <ShieldCheck size={28} color="#2563EB" />
               </View>
 
-              <Text style={styles.cardTitle}>Recuperar Contraseña</Text>
+              <Text style={styles.cardTitle}>Nueva Contraseña</Text>
               <Text style={styles.cardDescription}>
-                Ingresa tu correo institucional o personal. Te enviaremos un código de 6 dígitos para restablecer tu acceso.
+                Ingresa y confirma tu nueva clave de acceso clínico.
               </Text>
 
               {/* Mensajes de Error */}
@@ -101,22 +109,42 @@ export default function ForgotPasswordScreen() {
                 </View>
               )}
 
+              {/* Mensaje de Éxito */}
+              {success && (
+                <View style={styles.successBox}>
+                  <CheckCircle2 size={18} color="#047857" style={{ marginRight: 8 }} />
+                  <Text style={styles.successText}>
+                    ¡Contraseña actualizada con éxito! Redirigiendo...
+                  </Text>
+                </View>
+              )}
+
               {/* Formulario */}
               <AuthInput
-                label="Correo institucional / personal"
-                iconType="mail"
-                placeholder="usuario@gmail.com"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-                editable={!loading}
+                label="Nueva contraseña"
+                iconType="lock"
+                placeholder="Mínimo 6 caracteres"
+                isPassword
+                value={newPassword}
+                onChangeText={setNewPassword}
+                editable={!loading && !success}
+              />
+
+              <AuthInput
+                label="Confirmar nueva contraseña"
+                iconType="lock"
+                placeholder="Repite tu contraseña"
+                isPassword
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                editable={!loading && !success}
               />
 
               {/* Botón Principal */}
               <TouchableOpacity
-                style={[styles.submitButtonTouch, loading && styles.disabled]}
-                onPress={handleResetPassword}
-                disabled={loading}
+                style={[styles.submitButtonTouch, (loading || success) && styles.disabled]}
+                onPress={handleUpdate}
+                disabled={loading || success}
                 activeOpacity={0.88}
               >
                 <LinearGradient
@@ -129,7 +157,7 @@ export default function ForgotPasswordScreen() {
                     <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <View style={styles.submitContent}>
-                      <Text style={styles.submitText}>Enviar código de seguridad</Text>
+                      <Text style={styles.submitText}>Guardar Nueva Contraseña</Text>
                       <ArrowRight size={17} color="#FFFFFF" style={styles.submitArrow} />
                     </View>
                   )}
@@ -142,7 +170,7 @@ export default function ForgotPasswordScreen() {
                   onPress={() => router.replace('/login')}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.loginLink}>← Volver a Iniciar Sesión</Text>
+                  <Text style={styles.loginLink}>← Cancelar y volver al Login</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -168,7 +196,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 14,
+    paddingTop: 12,
     paddingBottom: 24,
     maxWidth: 420,
     width: '100%',
@@ -179,7 +207,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     paddingHorizontal: 20,
-    paddingTop: 22,
+    paddingTop: 24,
     paddingBottom: 22,
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 6 },
@@ -191,9 +219,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: '#DBEAFE',
@@ -232,6 +260,25 @@ const styles = StyleSheet.create({
     color: '#B91C1C',
     textAlign: 'center',
     fontFamily: 'PlusJakartaSans-Medium',
+  },
+  successBox: {
+    width: '100%',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successText: {
+    fontSize: 12,
+    color: '#047857',
+    fontWeight: '600',
+    fontFamily: 'PlusJakartaSans-SemiBold',
   },
   submitButtonTouch: {
     width: '100%',

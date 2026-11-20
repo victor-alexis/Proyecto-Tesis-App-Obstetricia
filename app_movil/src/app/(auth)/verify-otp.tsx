@@ -25,8 +25,8 @@ import {
   LoginBrand,
   LoginFooter,
   OtpInput,
-} from '../components/auth';
-import { useAuth } from '../context/AuthContext';
+} from '@/components/auth';
+import { useAuth } from '@/context/AuthContext';
 
 export default function VerifyOtpScreen() {
   const params = useLocalSearchParams<{ email?: string; type?: string }>();

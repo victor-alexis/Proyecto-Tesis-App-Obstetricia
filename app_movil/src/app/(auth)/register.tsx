@@ -21,9 +21,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 
-import { LoginBackground, LoginBrand, AuthInput, LoginFooter } from '../components/auth';
-import { useAuth } from '../context/AuthContext';
-import { isValidEmail } from '../utils/authErrors';
+import { LoginBackground, LoginBrand, AuthInput, LoginFooter } from '@/components/auth';
+import { useAuth } from '@/context/AuthContext';
+import { isValidEmail } from '@/utils/authErrors';
 
 export default function RegisterScreen() {
   const { signUpWithEmail } = useAuth();

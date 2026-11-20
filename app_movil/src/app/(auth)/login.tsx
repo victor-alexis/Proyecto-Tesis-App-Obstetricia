@@ -23,9 +23,9 @@ import {
   LoginBrand,
   LoginCard,
   LoginFooter,
-} from '../components/auth';
-import { useAuth } from '../context/AuthContext';
-import { isValidEmail } from '../utils/authErrors';
+} from '@/components/auth';
+import { useAuth } from '@/context/AuthContext';
+import { isValidEmail } from '@/utils/authErrors';
 
 export default function LoginScreen() {
   const { signInWithGoogle, signInWithPassword, session } = useAuth();
