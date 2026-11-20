@@ -4,6 +4,33 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
 
 ---
 
+### [2026-11-20] - Pulido de Calidad UI/UX Senior, Edge-to-Edge, AppLoadingScreen y Reestructuración Escalable
+* **Responsable:** Víctor Alexis & Asistente IA
+* **Fase:** Fase 2 (Frontend Móvil & Experiencia de Usuario) / Inicio Fase 3 (Seguridad)
+
+#### ¿Qué se hizo?
+1. **Reestructuración Escalable con Route Groups (`(auth)` y `(app)`):**
+   - Se organizaron todas las pantallas dentro de grupos de rutas sin alterar URLs públicas: `(auth)` para el flujo de acceso y `(app)` para el entorno clínico privado protegido por guardián de sesión.
+2. **Eliminación de Parpadeos Negros con `AppLoadingScreen`:**
+   - Creado `src/components/feedback/AppLoadingScreen.tsx` con la paleta oficial `#F3F7FC`, isotipo de ClinicalCase con pulso suave e indicador de estado de seguridad.
+   - Configuración de `ClinicalTheme` en `_layout.tsx` para que el lienzo nativo sea permanentemente `#F3F7FC`.
+3. **Flujo de Restablecimiento sin Fricción:**
+   - En `reset-password.tsx`, tras actualizar la clave, el usuario es redirigido directamente al panel principal (`/`) con aviso de bienvenida en lugar de forzarlo a reingresar credenciales.
+4. **Pantalla Completa 100% Edge-to-Edge:**
+   - Configuración de `StatusBar style="dark"` translúcido y fondo clínico absoluto que elimina franjas blancas en la barra de estado y notch en iOS/Android.
+5. **Anti-scroll y Bloqueo de Rebote:**
+   - Configurado `bounces={false}`, `overScrollMode="never"` y deshabilitación de barras de desplazamiento en todos los `ScrollView` de autenticación.
+6. **Autofill de Código OTP en Teclado:**
+   - Ajustada la geometría del `TextInput` en `OtpInput.tsx` para cubrir el área completa de casilleros con opacidad mínima, permitiendo que iOS QuickType y Android reconozcan el código y sugieran pegarlo con 1 solo toque.
+7. **Persistencia Cifrada por Hardware (`expo-secure-store`):**
+   - Migración del almacenamiento de sesiones a Android Keystore y Apple Keychain en dispositivos móviles con fallback SSR en web.
+8. **Verificación Técnica:**
+   - `tsc --noEmit` completado con 0 errores de tipado.
+   - `npx expo export --platform web` generó los 16 paquetes de rutas estáticas.
+   - Subido a GitHub y Vercel en la rama `main` (commit `49c73`).
+
+---
+
 ### [2026-11-19] - Flujos Completos de Autenticación Blindados, SMTP Transaccional Brevo y Blindaje de Navegación OTP
 * **Responsable:** Víctor Alexis & Asistente IA
 * **Fase:** Fase 2 (Frontend Móvil & Autenticación de Seguridad Clínica)
