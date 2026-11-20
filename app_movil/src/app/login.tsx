@@ -16,7 +16,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 
 import {
   LoginBackground,
@@ -31,13 +31,15 @@ export default function LoginScreen() {
   const { signInWithGoogle, signInWithPassword, session } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const pathname = usePathname();
 
-  // Redirigir al inicio si ya hay sesión autenticada activa
+  // Redirigir al inicio ÚNICAMENTE si ya hay sesión autenticada activa y el usuario está efectivamente en /login
+  // Esto evita que interrumpa flujos en segundo plano como recuperación de contraseña (/verify-otp -> /reset-password)
   useEffect(() => {
-    if (session) {
+    if (session && pathname === '/login') {
       router.replace('/');
     }
-  }, [session]);
+  }, [session, pathname]);
 
   const handleGoogleLogin = async () => {
     setErrorMessage(null);
