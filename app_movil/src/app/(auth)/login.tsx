@@ -11,9 +11,8 @@ import {
   StyleSheet,
   View,
   StatusBar,
-  ScrollView,
-  KeyboardAvoidingView,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, usePathname } from 'expo-router';
@@ -128,18 +127,12 @@ export default function LoginScreen() {
       <LoginBackground />
 
       <SafeAreaView style={styles.safeArea}>
+        {/* KeyboardAvoidingView solo ajusta altura (no hace scroll) en iOS */}
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'height' : undefined}
           style={styles.keyboardContainer}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-            bounces={false}
-            overScrollMode="never"
-            keyboardShouldPersistTaps="handled"
-          >
+          <View style={styles.scrollContent}>
             {/* ── Encabezado: ClinicalCase + Subtítulo ── */}
             <LoginBrand />
 
@@ -155,7 +148,7 @@ export default function LoginScreen() {
 
             {/* ── Pie de Página: Aviso de Seguridad + Créditos ── */}
             <LoginFooter />
-          </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
@@ -174,13 +167,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flex: 1,
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
     maxWidth: 420,
     width: '100%',
     alignSelf: 'center',
-    flexGrow: 1,
     justifyContent: 'space-between',
   },
 });

@@ -4,6 +4,27 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
 
 ---
 
+### [2026-11-20] - Erradicación de Zoom/Scroll en Inputs y Blindaje Total del Flujo OTP de Recuperación
+* **Responsable:** Víctor Alexis & Asistente IA
+* **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX) / Fase 3 (Seguridad)
+
+#### ¿Qué se hizo?
+1. **Erradicación de Zoom y Desplazamiento en Navegadores Móviles (+html.tsx):**
+   - Creado `src/app/+html.tsx` con viewport estricto: `user-scalable=no, maximum-scale=1, minimum-scale=1, viewport-fit=cover`.
+   - Inyección de CSS global: `overscroll-behavior: none`, `overflow: hidden`, `touch-action: pan-x pan-y` e `input, textarea { font-size: 16px !important }` para neutralizar el zoom automático que iOS Safari y Chrome ejecutan al enfocar campos de texto.
+   - Con esto el fondo clínico y los orbes en `position: absolute` permanecen 100% estables sin romper la estética de la pantalla.
+2. **Eliminación de Scroll Involuntario en Pantallas de Autenticación:**
+   - En `login.tsx`, `forgot-password.tsx`, `verify-otp.tsx` y `reset-password.tsx` se sustituyó la combinación elástica `ScrollView` por contenedores estáticos `View` con `KeyboardAvoidingView behavior="height"`, garantizando que ningún toque o foco provoque desplazamiento o desalinee la interfaz.
+   - En `register.tsx` se ajustó el comportamiento a `height` manteniendo control de overscroll.
+3. **Resolución del Flujo de Recuperación (Forgot → Verify OTP → Reset Password):**
+   - Reparado el cierre de etiquetas JSX en `reset-password.tsx` que impedía compilar la ruta.
+   - Creado el flag `isRecovering` en `AuthContext` que se activa al solicitar el reseteo y persiste durante la validación del código OTP de recuperación (`type: 'recovery'`), blindando a `(app)/_layout.tsx` para que el guardián de sesión no redirija a `/login` a mitad de la transición.
+4. **Verificación de Calidad y Compilación:**
+   - `npx tsc --noEmit`: 0 errores de tipado.
+   - `npx expo export --platform web`: Compilación de 16 rutas estáticas exitosa (código 0).
+
+---
+
 ### [2026-11-20] - Pulido de Calidad UI/UX Senior, Edge-to-Edge, AppLoadingScreen y Reestructuración Escalable
 * **Responsable:** Víctor Alexis & Asistente IA
 * **Fase:** Fase 2 (Frontend Móvil & Experiencia de Usuario) / Inicio Fase 3 (Seguridad)

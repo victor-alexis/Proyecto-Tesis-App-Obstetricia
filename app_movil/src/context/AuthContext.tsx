@@ -12,6 +12,9 @@ export interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  /** true mientras el usuario está en el flujo forgot → verify-otp → reset-password.
+   *  Permite al guardián de (app)/_layout.tsx no forzar /login durante este proceso. */
+  isRecovering: boolean;
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signInWithPassword: (
     email: string,
@@ -43,6 +46,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: false,
+  isRecovering: false,
   signInWithGoogle: async () => ({ success: false }),
   signInWithPassword: async () => ({ success: false }),
   signUpWithEmail: async () => ({ success: false }),
@@ -61,6 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  // isRecovering: true desde que se solicita reset OTP hasta que la nueva contraseña se aplica.
+  // Evita que el guardián de (app)/_layout.tsx redirija al login durante el flujo de recovery.
+  const [isRecovering, setIsRecovering] = useState(false);
 
   useEffect(() => {
     // Timeout de seguridad: asegura que loading pase a false en máx 1s
@@ -322,6 +329,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: mapSupabaseAuthError(error.message) };
       }
 
+      // Marcar inicio de flujo de recuperación para proteger la navegación
+      setIsRecovering(true);
       return { success: true };
     } catch (err: any) {
       setLoading(false);
@@ -353,6 +362,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Al verificar recovery, el usuario queda autenticado en sesión de recuperación
+      // isRecovering permanece true hasta que updatePassword finalice
       setSession(data.session);
       setUser(data.user);
       setLoading(false);
@@ -380,6 +390,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: mapSupabaseAuthError(error.message) };
       }
 
+      // Finalizar el flujo de recuperación: el guardián del (app)/_layout.tsx puede operar normal
+      setIsRecovering(false);
       return { success: true };
     } catch (err: any) {
       setLoading(false);
@@ -411,6 +423,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         user,
         loading,
+        isRecovering,
         signInWithGoogle,
         signInWithPassword,
         signUpWithEmail,
