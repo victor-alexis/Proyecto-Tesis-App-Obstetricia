@@ -72,11 +72,22 @@
 ---
 
 ## Fase 3: Persistencia, Modelado Clínico y Privacidad
-*Objetivo: Garantizar la privacidad de fichas obstétricas y gestionar roles de usuario (profesional vs paciente).*
+*Objetivo: Garantizar la privacidad de fichas obstétricas, cifrado en el dispositivo y preparar RLS.*
 
-- [ ] Esquema de base de datos relacional en Supabase (tablas: `usuarios`, `pacientes`, `fichas_obstetricas`, `controles_prenatales`).
-- [ ] Políticas de Row Level Security (RLS) en Supabase para cumplimiento ético/médico de datos sensibles.
-- [ ] Mapeo de perfiles institucionales vs pacientes en la base de datos.
+- [x] **Paso 3.1: Almacenamiento Cifrado de Sesión en Móvil (2026-11-20):**
+  - Instalado módulo nativo `expo-secure-store` compatible con SDK 58.
+  - Implementado adaptador híbrido `secureAuthStorage` en `app_movil/src/services/supabase.ts`:
+    - Móvil (Android/iOS): Cifrado por hardware mediante Android Keystore y Apple Keychain.
+    - Web (SPA/SSR): `AsyncStorage` seguro resistente a renderizado estático/SSR.
+  - Validado con `tsc --noEmit` (0 errores) y exportación web para Vercel.
+- [ ] **[PENDIENTE] Paso 3.2: Modelado Relacional de Perfiles y Roles (RBAC):**
+  - Creación de tabla `public.perfiles` vinculada a `auth.users(id)`.
+  - Roles clínicos: `profesional_salud`, `estudiante`, `paciente`.
+  - Trigger automático `on_auth_user_created` en PostgreSQL.
+  - *(Pospuesto por solicitud del usuario para una etapa posterior)*.
+- [x] **Paso 3.3: Arquitectura y Políticas de Row Level Security (RLS):**
+  - Activación de RLS en Supabase para protección a nivel de fila según Ley 20.584.
+  - Políticas de aislamiento: Cada usuario/profesional solo accede a sus propios registros clínicos.
 
 ---
 
