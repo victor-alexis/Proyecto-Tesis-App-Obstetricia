@@ -1,7 +1,11 @@
 /**
  * reset-password.tsx
- * Pantalla para definir la nueva contraseña tras verificar el código de recuperación.
- * Invoca supabase.auth.updateUser({ password }) y asegura el cambio de clave.
+ * Pantalla para definir la nueva contraseña tras verificar el código OTP (Módulo D3.2 y D3.3).
+ * Diseño neumórfico con Bodoni Moda + DM Sans.
+ * Construido exclusivamente con tokens y componentes de `@/ui/Neu`.
+ * Incluye:
+ * - D3.2: Nueva contraseña + confirmación, medidor de seguridad dinámico y requisitos.
+ * - D3.3: Confirmación de éxito con avisos de cuenta protegida y cierre de otras sesiones.
  */
 
 import React, { useState } from 'react';
@@ -9,308 +13,416 @@ import {
   StyleSheet,
   View,
   Text,
-  TouchableOpacity,
+  ScrollView,
   Platform,
-  ActivityIndicator,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react-native';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
-import {
-  LoginBackground,
-  LoginBrand,
-  AuthInput,
-  LoginFooter,
-} from '@/components/auth';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/services/supabase';
+import {
+  BackButton,
+  IconPlate,
+  AccentBar,
+  Heading,
+  Subtitle,
+  NeuCard,
+  NeuInput,
+  NeuButton,
+  StrengthMeter,
+  Requirement,
+  ListRow,
+  ErrorBanner,
+  SecureFooter,
+} from '@/ui/Neu';
+import {
+  LockIcon,
+  CheckCircleIcon,
+  ShieldIcon,
+  DeviceIcon,
+} from '@/ui/icons';
+import { colors, fonts } from '@/ui/tokens';
 
 export default function ResetPasswordScreen() {
-  const { updatePassword } = useAuth();
-  const [newPassword, setNewPassword] = useState('');
+  const { updatePassword, signOut } = useAuth();
+
+  const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleUpdate = async () => {
-    if (!newPassword || !confirmPassword) {
-      setErrorMessage('Por favor completa ambos campos.');
+  // Errores
+  const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
+  const [confirmError, setConfirmError] = useState<string | undefined>(undefined);
+  const [bannerError, setBannerError] = useState<{ title: string; text?: string } | null>(null);
+
+  // Requisitos de contraseña
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
+  // Cálculo de medidor de seguridad (0 a 4)
+  const computeStrength = () => {
+    if (!password) return { level: 0, label: 'Baja' };
+    let score = 0;
+    if (hasMinLength) score++;
+    if (hasUppercase) score++;
+    if (hasNumber) score++;
+    if (/[^A-Za-z0-9]/.test(password) || password.length >= 12) score++;
+
+    switch (score) {
+      case 0:
+      case 1:
+        return { level: 1, label: 'Baja' };
+      case 2:
+        return { level: 2, label: 'Media' };
+      case 3:
+        return { level: 3, label: 'Fuerte' };
+      case 4:
+      default:
+        return { level: 4, label: 'Muy fuerte' };
+    }
+  };
+
+  const { level: strengthLevel, label: strengthLabel } = computeStrength();
+
+  const triggerHaptic = (type: Haptics.NotificationFeedbackType) => {
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(type).catch(() => {});
+    }
+  };
+
+  const handleSavePassword = async () => {
+    setBannerError(null);
+    setPasswordError(undefined);
+    setConfirmError(undefined);
+
+    let hasError = false;
+
+    if (!hasMinLength || !hasUppercase || !hasNumber) {
+      setPasswordError('La contraseña no cumple con los requisitos de seguridad');
+      hasError = true;
+    }
+
+    if (!confirmPassword) {
+      setConfirmError('Por favor confirma tu nueva contraseña');
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      setConfirmError('Las contraseñas no coinciden');
+      hasError = true;
+    }
+
+    if (hasError) {
+      triggerHaptic(Haptics.NotificationFeedbackType.Warning);
       return;
     }
 
-    if (newPassword.length < 6) {
-      setErrorMessage('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setErrorMessage('Las contraseñas no coinciden. Por favor verifícalas.');
-      return;
-    }
+    setLoading(true);
 
     try {
-      setLoading(true);
-      setErrorMessage(null);
-
-      const result = await updatePassword(newPassword);
+      const result = await updatePassword(password);
 
       if (!result.success) {
-        setErrorMessage(result.error || 'No se pudo actualizar la contraseña.');
+        triggerHaptic(Haptics.NotificationFeedbackType.Error);
+        const errLower = (result.error || '').toLowerCase();
+
+        if (errLower.includes('same_password') || errLower.includes('igual a la anterior')) {
+          setPasswordError('No puede ser igual a la anterior');
+        } else {
+          setBannerError({
+            title: 'Error al actualizar',
+            text: result.error || 'No fue posible guardar la nueva contraseña.',
+          });
+        }
         return;
       }
 
-      setSuccess(true);
-      // Redirigir directamente al panel clínico principal (el usuario ya queda autenticado por Supabase)
-      setTimeout(() => {
-        router.replace('/');
-      }, 1200);
+      // Cerrar las demás sesiones activas por seguridad clínica (D3.3)
+      supabase.auth.signOut({ scope: 'others' }).catch(() => {});
+
+      triggerHaptic(Haptics.NotificationFeedbackType.Success);
+      setIsSuccess(true);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Error inesperado al cambiar contraseña.');
+      triggerHaptic(Haptics.NotificationFeedbackType.Error);
+      setBannerError({
+        title: 'Error inesperado',
+        text: err?.message || 'Ocurrió un error al procesar el cambio de contraseña.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <LoginBackground />
+  const handleReturnToLogin = async () => {
+    await signOut();
+    router.replace('/login');
+  };
 
+  // ──────────────────────────────────────────────
+  // PANTALLA D3.3: Confirmación de Éxito
+  // ──────────────────────────────────────────────
+  if (isSuccess) {
+    return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.scrollContent}>
-          <LoginBrand />
-
-            {/* ── Tarjeta de Nueva Contraseña ── */}
-            <View style={styles.card}>
-              <View style={styles.iconCircle}>
-                <ShieldCheck size={28} color="#2563EB" />
-              </View>
-
-              <Text style={styles.cardTitle}>Nueva Contraseña</Text>
-              <Text style={styles.cardDescription}>
-                Ingresa y confirma tu nueva clave de acceso clínico.
-              </Text>
-
-              {/* Mensajes de Error */}
-              {errorMessage && (
-                <View style={styles.errorBox}>
-                  <Text style={styles.errorText}>⚠ {errorMessage}</Text>
-                </View>
-              )}
-
-              {/* Mensaje de Éxito */}
-              {success && (
-                <View style={styles.successBox}>
-                  <CheckCircle2 size={18} color="#047857" style={{ marginRight: 8 }} />
-                  <Text style={styles.successText}>
-                    ¡Contraseña actualizada con éxito! Ingresando a tu panel clínico...
-                  </Text>
-                </View>
-              )}
-
-              {/* Formulario */}
-              <AuthInput
-                label="Nueva contraseña"
-                iconType="lock"
-                placeholder="Mínimo 6 caracteres"
-                isPassword
-                value={newPassword}
-                onChangeText={setNewPassword}
-                editable={!loading && !success}
-              />
-
-              <AuthInput
-                label="Confirmar nueva contraseña"
-                iconType="lock"
-                placeholder="Repite tu contraseña"
-                isPassword
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                editable={!loading && !success}
-              />
-
-              {/* Botón Principal */}
-              <TouchableOpacity
-                style={[styles.submitButtonTouch, (loading || success) && styles.disabled]}
-                onPress={handleUpdate}
-                disabled={loading || success}
-                activeOpacity={0.88}
-              >
-                <LinearGradient
-                  colors={['#00446E', '#0D5C91']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.submitGradient}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <View style={styles.submitContent}>
-                      <Text style={styles.submitText}>Guardar Nueva Contraseña</Text>
-                      <ArrowRight size={17} color="#FFFFFF" style={styles.submitArrow} />
-                    </View>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-
-              {/* Enlace de Retorno */}
-              <View style={styles.loginRow}>
-                <TouchableOpacity
-                  onPress={() => router.replace('/login')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.loginLink}>← Cancelar y volver al Login</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <LoginFooter />
+        <View style={styles.mainContainer}>
+          {/* Barra Superior */}
+          <View style={styles.topBar}>
+            <BackButton onPress={handleReturnToLogin} />
+            <View style={styles.topBarSpacer} />
           </View>
-        </SafeAreaView>
-      </View>
+
+          {/* Tarjeta de Éxito (D3.3) */}
+          <View style={styles.cardWrapper}>
+            <NeuCard style={styles.cardSuccess}>
+              {/* Placa con Check Verde/Texto */}
+              <IconPlate badge="accent">
+                <CheckCircleIcon size={30} color={colors.text} />
+              </IconPlate>
+
+              {/* Encabezado */}
+              <View style={styles.headerWrap}>
+                <AccentBar center />
+                <Heading accent="listo!" center>¡Todo </Heading>
+                <View style={styles.subtitleWrap}>
+                  <Subtitle center>
+                    Tu contraseña se actualizó correctamente. Ya puedes ingresar con ella.
+                  </Subtitle>
+                </View>
+              </View>
+
+              {/* Filas informativas de seguridad */}
+              <View style={styles.listRowsWrap}>
+                <ListRow
+                  icon={<ShieldIcon size={18} color={colors.text} />}
+                  title="Cuenta protegida"
+                  text="La contraseña anterior ya no es válida."
+                />
+                <ListRow
+                  icon={<DeviceIcon size={18} color={colors.text} />}
+                  title="Sesiones cerradas"
+                  text="Cerramos los otros dispositivos con tu cuenta."
+                />
+              </View>
+
+              {/* Botón de Retorno al Login */}
+              <View style={styles.buttonWrapSuccess}>
+                <NeuButton
+                  title="Volver a iniciar sesión"
+                  onPress={handleReturnToLogin}
+                />
+              </View>
+            </NeuCard>
+          </View>
+
+          {/* Pie de página seguro */}
+          <View style={styles.footerWrap}>
+            <SecureFooter />
+          </View>
+        </View>
+      </SafeAreaView>
     );
   }
 
+  // ──────────────────────────────────────────────
+  // PANTALLA D3.2: Formulario Nueva Contraseña
+  // ──────────────────────────────────────────────
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Barra Superior */}
+          <View style={styles.topBar}>
+            <BackButton onPress={() => router.back()} />
+            <View style={styles.topBarSpacer} />
+          </View>
+
+          {/* Tarjeta Neumórfica (D3.2) */}
+          <View style={styles.cardWrapper}>
+            <NeuCard style={styles.cardForm}>
+              <AccentBar />
+
+              <Heading accent="contraseña">Nueva </Heading>
+
+              <View style={styles.subtitleWrapLeft}>
+                <Subtitle>
+                  Elige una contraseña segura que no uses en otros sitios.
+                </Subtitle>
+              </View>
+
+              {/* Banner de error si ocurre */}
+              {bannerError && (
+                <View style={styles.bannerWrap}>
+                  <ErrorBanner
+                    title={bannerError.title}
+                    text={bannerError.text}
+                  />
+                </View>
+              )}
+
+              {/* Campos de Contraseña */}
+              <View style={styles.inputsWrap}>
+                <NeuInput
+                  label="Nueva contraseña"
+                  icon={<LockIcon />}
+                  placeholder="Mínimo 8 caracteres"
+                  secure
+                  value={password}
+                  onChangeText={(val) => {
+                    setPassword(val);
+                    if (passwordError) setPasswordError(undefined);
+                  }}
+                  autoComplete="new-password"
+                  error={passwordError}
+                />
+
+                <NeuInput
+                  label="Confirmar contraseña"
+                  icon={<LockIcon />}
+                  placeholder="Repite tu contraseña"
+                  secure
+                  value={confirmPassword}
+                  onChangeText={(val) => {
+                    setConfirmPassword(val);
+                    if (confirmError) setConfirmError(undefined);
+                  }}
+                  autoComplete="new-password"
+                  error={confirmError}
+                />
+              </View>
+
+              {/* Medidor de Seguridad */}
+              <View style={styles.strengthWrap}>
+                <StrengthMeter level={strengthLevel} label={strengthLabel} />
+              </View>
+
+              {/* Lista de Requisitos de Contraseña */}
+              <View style={styles.requirementsWrap}>
+                <Requirement ok={hasMinLength}>Mínimo 8 caracteres</Requirement>
+                <Requirement ok={hasUppercase}>Una letra mayúscula</Requirement>
+                <Requirement ok={hasNumber}>Un número</Requirement>
+              </View>
+
+              {/* Botón Guardar Contraseña */}
+              <View style={styles.buttonWrapForm}>
+                <NeuButton
+                  title="Guardar contraseña"
+                  onPress={handleSavePassword}
+                  loading={loading}
+                  disabled={loading}
+                />
+              </View>
+            </NeuCard>
+          </View>
+
+          {/* Pie de página seguro */}
+          <View style={styles.footerWrap}>
+            <SecureFooter />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F3F7FC',
-  },
   safeArea: {
     flex: 1,
+    backgroundColor: colors.bg,
   },
-  scrollContent: {
+  keyboardAvoid: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 12,
+  },
+  mainContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 22,
+    paddingTop: 16,
     paddingBottom: 24,
     maxWidth: 420,
     width: '100%',
     alignSelf: 'center',
-    justifyContent: 'center',
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 22,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#D8E4F2',
-    alignItems: 'center',
-  },
-  iconCircle: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 4,
-    textAlign: 'center',
-    fontFamily: 'PlusJakartaSans-Bold',
-  },
-  cardDescription: {
-    fontSize: 12.5,
-    color: '#64748B',
-    lineHeight: 18,
-    marginBottom: 16,
-    textAlign: 'center',
-    fontFamily: 'PlusJakartaSans-Regular',
-  },
-  errorBox: {
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 22,
+    paddingTop: 16,
+    paddingBottom: 24,
+    maxWidth: 420,
     width: '100%',
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 14,
+    alignSelf: 'center',
   },
-  errorText: {
-    fontSize: 12,
-    color: '#B91C1C',
-    textAlign: 'center',
-    fontFamily: 'PlusJakartaSans-Medium',
-  },
-  successBox: {
-    width: '100%',
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 14,
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  topBarSpacer: {
+    width: 46,
+  },
+  cardWrapper: {
+    flex: 1,
     justifyContent: 'center',
+    paddingVertical: 14,
   },
-  successText: {
-    fontSize: 12,
-    color: '#047857',
-    fontWeight: '600',
-    fontFamily: 'PlusJakartaSans-SemiBold',
-  },
-  submitButtonTouch: {
+  cardForm: {
     width: '100%',
-    marginTop: 6,
-    marginBottom: 14,
-    borderRadius: 12,
-    shadowColor: '#00446E',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    elevation: 4,
+    paddingTop: 28,
+    paddingBottom: 24,
+    paddingHorizontal: 26,
   },
-  submitGradient: {
-    height: 48,
-    borderRadius: 12,
+  cardSuccess: {
+    width: '100%',
+    paddingTop: 34,
+    paddingBottom: 24,
+    paddingHorizontal: 26,
+  },
+  headerWrap: {
+    marginTop: 24,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  submitContent: {
-    flexDirection: 'row',
+  subtitleWrap: {
+    marginTop: 10,
+  },
+  subtitleWrapLeft: {
+    marginTop: 8,
+  },
+  bannerWrap: {
+    marginTop: 16,
+  },
+  inputsWrap: {
+    marginTop: 24,
+    gap: 14,
+  },
+  strengthWrap: {
+    marginTop: 16,
+  },
+  requirementsWrap: {
+    marginTop: 16,
+    gap: 10,
+  },
+  listRowsWrap: {
+    marginTop: 24,
+    gap: 12,
+  },
+  buttonWrapForm: {
+    marginTop: 22,
+  },
+  buttonWrapSuccess: {
+    marginTop: 24,
+  },
+  footerWrap: {
+    marginTop: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitText: {
-    color: '#FFFFFF',
-    fontSize: 14.5,
-    fontWeight: '600',
-    fontFamily: 'PlusJakartaSans-SemiBold',
-  },
-  submitArrow: {
-    marginLeft: 6,
-  },
-  disabled: {
-    opacity: 0.7,
-  },
-  loginRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  loginLink: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: '#0D5C91',
-    fontFamily: 'PlusJakartaSans-Bold',
   },
 });

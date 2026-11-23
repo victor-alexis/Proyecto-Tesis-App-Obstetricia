@@ -39,7 +39,7 @@ export const AccentBar = ({ center }: { center?: boolean }) => (
 );
 
 /** Título con acento en cursiva gris: <Heading accent="cuenta">Crea tu </Heading> */
-export const Heading = ({ children, accent, center }: { children: string; accent: string; center?: boolean }) => (
+export const Heading = ({ children, accent, center }: { children: ReactNode; accent: string; center?: boolean }) => (
   <Text
     accessibilityRole="header"
     style={{ fontFamily: fonts.display, fontSize: 30, lineHeight: 34, color: colors.ink, textAlign: center ? 'center' : 'left' }}
