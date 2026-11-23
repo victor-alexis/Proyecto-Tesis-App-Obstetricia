@@ -37,14 +37,13 @@ import {
   ListRow,
   ErrorBanner,
   SecureFooter,
-} from '@/ui/Neu';
-import {
   LockIcon,
   CheckCircleIcon,
   ShieldIcon,
   DeviceIcon,
-} from '@/ui/icons';
-import { colors, fonts } from '@/ui/tokens';
+  colors,
+  fonts,
+} from '@/components/ui';
 
 export default function ResetPasswordScreen() {
   const { updatePassword, signOut } = useAuth();

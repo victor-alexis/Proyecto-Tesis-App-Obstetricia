@@ -34,9 +34,11 @@ import {
   NeuLink,
   OtpInput,
   SecureFooter,
-} from '@/ui/Neu';
-import { ShieldIcon, InfoIcon } from '@/ui/icons';
-import { colors, fonts } from '@/ui/tokens';
+  ShieldIcon,
+  InfoIcon,
+  colors,
+  fonts,
+} from '@/components/ui';
 
 const MAX_ATTEMPTS = 3;
 const RESEND_COOLDOWN_SECONDS = 60;

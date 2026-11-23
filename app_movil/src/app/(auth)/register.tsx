@@ -36,9 +36,12 @@ import {
   NeuLink,
   InlineError,
   ErrorBanner,
-} from '@/ui/Neu';
-import { UserIcon, MailIcon, LockIcon } from '@/ui/icons';
-import { colors, fonts } from '@/ui/tokens';
+  UserIcon,
+  MailIcon,
+  LockIcon,
+  colors,
+  fonts,
+} from '@/components/ui';
 
 export default function RegisterScreen() {
   const { signUpWithEmail, signInWithGoogle } = useAuth();

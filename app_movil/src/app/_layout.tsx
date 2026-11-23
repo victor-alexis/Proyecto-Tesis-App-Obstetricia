@@ -19,7 +19,7 @@ import {
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AppLoadingScreen, OfflineBanner } from '@/components/feedback';
-import { colors } from '@/ui/tokens';
+import { colors } from '@/components/ui';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 

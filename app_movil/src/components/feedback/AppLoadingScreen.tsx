@@ -1,13 +1,13 @@
 /**
  * AppLoadingScreen.tsx
  * Pantalla de carga clínica estilizada para transiciones sin parpadeos negros.
- * Mantiene la atmósfera #F3F7FC de ClinicalCase con pulso suave y estado de seguridad.
+ * Mantiene la atmósfera neumórfica #EEF2F6 de ClinicalCase con pulso suave y estado de seguridad.
  */
 
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, ActivityIndicator, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { LoginBackground } from '../auth/LoginBackground';
+import { Wordmark, colors, fonts } from '@/components/ui';
 
 interface AppLoadingScreenProps {
   message?: string;
@@ -22,7 +22,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({
     const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.06,
+          toValue: 1.04,
           duration: 900,
           useNativeDriver: true,
         }),
@@ -40,22 +40,20 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-      <LoginBackground />
 
       <View style={styles.content}>
         {/* Isotipo / Brand con animación de pulso sutil */}
         <Animated.View style={[styles.brandContainer, { transform: [{ scale: pulseAnim }] }]}>
-          <View style={styles.iconCircle}>
-            <Text style={styles.sparkle}>✦</Text>
-          </View>
-          <Text style={styles.brandTitle}>ClinicalCase</Text>
+          <Wordmark size={46} />
         </Animated.View>
 
-        <Text style={styles.brandSubtitle}>Sistema Clínico Perinatal</Text>
+        <Text style={styles.brandSubtitle}>
+          Sistema de Soporte a la Decisión Clínica y Seguimiento Perinatal
+        </Text>
 
         {/* Indicador de carga médica */}
         <View style={styles.loaderBox}>
-          <ActivityIndicator size={18} color="#0D5C91" />
+          <ActivityIndicator size={16} color={colors.accent} />
           <Text style={styles.messageText}>{message}</Text>
         </View>
       </View>
@@ -66,7 +64,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F7FC',
+    backgroundColor: colors.bg,
   },
   content: {
     flex: 1,
@@ -75,66 +73,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   brandContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
-  },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1.5,
-    borderColor: '#BFDBFE',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  sparkle: {
-    fontSize: 20,
-    color: '#0D5C91',
-    fontWeight: '700',
-  },
-  brandTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#00446E',
-    letterSpacing: -0.5,
-    fontFamily: 'PlayfairDisplay-BoldItalic',
+    marginBottom: 8,
   },
   brandSubtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    fontWeight: '500',
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.muted,
+    fontFamily: fonts.body,
+    textAlign: 'center',
+    maxWidth: 270,
     marginBottom: 32,
-    fontFamily: 'PlusJakartaSans-Medium',
   },
   loaderBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: colors.bg,
     borderWidth: 1,
-    borderColor: '#D8E4F2',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    shadowColor: '#00446E',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: 'rgba(255, 255, 255, 0.75)',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 24,
+    boxShadow: '6px 6px 14px rgba(163,177,198,0.6), -6px -6px 14px rgba(255,255,255,0.95)',
   },
   messageText: {
-    fontSize: 12.5,
-    color: '#0D5C91',
-    fontWeight: '600',
+    fontSize: 13,
+    color: colors.ink,
+    fontFamily: fonts.bodySemi,
     marginLeft: 10,
-    fontFamily: 'PlusJakartaSans-SemiBold',
   },
 });

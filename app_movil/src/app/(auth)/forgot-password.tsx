@@ -33,9 +33,11 @@ import {
   NeuLink,
   ErrorBanner,
   SecureFooter,
-} from '@/ui/Neu';
-import { KeyIcon, MailIcon } from '@/ui/icons';
-import { colors, fonts } from '@/ui/tokens';
+  KeyIcon,
+  MailIcon,
+  colors,
+  fonts,
+} from '@/components/ui';
 
 export default function ForgotPasswordScreen() {
   const { sendPasswordResetOtp } = useAuth();

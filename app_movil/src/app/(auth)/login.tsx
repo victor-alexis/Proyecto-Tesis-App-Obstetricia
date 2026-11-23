@@ -34,9 +34,11 @@ import {
   NeuLink,
   ErrorBanner,
   SecureFooter,
-} from '@/ui/Neu';
-import { MailIcon, LockIcon } from '@/ui/icons';
-import { colors, fonts } from '@/ui/tokens';
+  MailIcon,
+  LockIcon,
+  colors,
+  fonts,
+} from '@/components/ui';
 
 const MAX_ATTEMPTS = 3;
 const BLOCK_DURATION_SECONDS = 60;
