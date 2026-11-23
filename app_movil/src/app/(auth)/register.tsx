@@ -1,8 +1,9 @@
 /**
  * register.tsx
- * Pantalla de Registro de ClinicalCase.
- * Permite a nuevos profesionales registrarse con correo institucional/personal y contraseña.
- * Conectada al flujo de verificación OTP de 6 dígitos.
+ * Pantalla de Registro de ClinicalCase (Módulo D2 · Crear Cuenta).
+ * Diseño neumórfico con Bodoni Moda + DM Sans.
+ * Construido exclusivamente con tokens y componentes de `@/ui/Neu`.
+ * Estados: Normal, Correo ya registrado, Contraseña débil, Términos sin aceptar, Cargando.
  */
 
 import React, { useState } from 'react';
@@ -10,63 +11,174 @@ import {
   StyleSheet,
   View,
   Text,
-  TouchableOpacity,
-  ActivityIndicator,
+  ScrollView,
+  Platform,
+  Alert,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight } from 'lucide-react-native';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
-import { LoginBackground, LoginBrand, AuthInput, LoginFooter } from '@/components/auth';
 import { useAuth } from '@/context/AuthContext';
 import { isValidEmail } from '@/utils/authErrors';
+import {
+  AccentBar,
+  Heading,
+  Subtitle,
+  NeuCard,
+  BackButton,
+  NeuInput,
+  NeuButton,
+  GoogleButton,
+  OrDivider,
+  NeuCheckbox,
+  NeuLink,
+  InlineError,
+  ErrorBanner,
+} from '@/ui/Neu';
+import { UserIcon, MailIcon, LockIcon } from '@/ui/icons';
+import { colors, fonts } from '@/ui/tokens';
 
 export default function RegisterScreen() {
-  const { signUpWithEmail } = useAuth();
+  const { signUpWithEmail, signInWithGoogle } = useAuth();
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Estados de error por campo
+  const [nameError, setNameError] = useState<string | undefined>(undefined);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
+  const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
+  const [termsError, setTermsError] = useState<string | undefined>(undefined);
+  const [bannerError, setBannerError] = useState<{ title: string; text?: string } | null>(null);
+
+  const triggerHaptic = (type: Haptics.NotificationFeedbackType) => {
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(type).catch(() => {});
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    setBannerError(null);
+    setLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      if (!result.success && result.error) {
+        triggerHaptic(Haptics.NotificationFeedbackType.Error);
+        setBannerError({
+          title: 'Error con Google',
+          text: result.error,
+        });
+      } else {
+        triggerHaptic(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (err: any) {
+      triggerHaptic(Haptics.NotificationFeedbackType.Error);
+      setBannerError({
+        title: 'Error con Google',
+        text: err?.message || 'No fue posible completar el registro con Google.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateForm = (): boolean => {
+    let isValid = true;
+
+    // Validación Nombre
+    const trimmedName = fullName.trim();
+    if (!trimmedName) {
+      setNameError('Por favor ingresa tu nombre completo');
+      isValid = false;
+    } else {
+      setNameError(undefined);
+    }
+
+    // Validación Correo
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setEmailError('Por favor ingresa tu correo institucional o personal');
+      isValid = false;
+    } else if (!isValidEmail(trimmedEmail)) {
+      setEmailError('Formato de correo electrónico no válido');
+      isValid = false;
+    } else {
+      setEmailError(undefined);
+    }
+
+    // Validación Contraseña (mínimo 8 caracteres según D2)
+    if (!password) {
+      setPasswordError('Por favor ingresa una contraseña');
+      isValid = false;
+    } else if (password.length < 8) {
+      setPasswordError('La contraseña debe tener al menos 8 caracteres');
+      isValid = false;
+    } else {
+      setPasswordError(undefined);
+    }
+
+    // Validación Términos y Condiciones
+    if (!acceptedTerms) {
+      setTermsError('Debes aceptar los términos de uso y la política de privacidad');
+      isValid = false;
+    } else {
+      setTermsError(undefined);
+    }
+
+    return isValid;
+  };
 
   const handleRegister = async () => {
+    setBannerError(null);
+
+    if (!validateForm()) {
+      triggerHaptic(Haptics.NotificationFeedbackType.Warning);
+      return;
+    }
+
     const trimmedName = fullName.trim();
     const trimmedEmail = email.trim();
 
-    if (!trimmedName || !trimmedEmail || !password) {
-      setErrorMessage('Por favor completa todos los campos.');
-      return;
-    }
-
-    if (!isValidEmail(trimmedEmail)) {
-      setErrorMessage('Por favor ingresa un correo electrónico con formato válido.');
-      return;
-    }
-
-    if (password.length < 6) {
-      setErrorMessage('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
+    setLoading(true);
 
     try {
-      setLoading(true);
-      setErrorMessage(null);
-
       const result = await signUpWithEmail(trimmedEmail, password, trimmedName);
 
       if (!result.success) {
-        setErrorMessage(result.error || 'Error al procesar el registro.');
+        triggerHaptic(Haptics.NotificationFeedbackType.Error);
+        const errLower = (result.error || '').toLowerCase();
+
+        if (
+          errLower.includes('already registered') ||
+          errLower.includes('already in use') ||
+          errLower.includes('ya existe')
+        ) {
+          setEmailError('Ya existe una cuenta registrada con este correo');
+        } else if (errLower.includes('weak') || errLower.includes('password')) {
+          setPasswordError('La contraseña es demasiado débil o no cumple los requisitos');
+        } else {
+          setBannerError({
+            title: 'Error al crear cuenta',
+            text: result.error || 'No se pudo completar el registro.',
+          });
+        }
         return;
       }
 
-      // Si la sesión ya se inició automáticamente, ir al home
+      triggerHaptic(Haptics.NotificationFeedbackType.Success);
+
+      // Si la sesión se inició inmediatamente (sin confirmación requerida)
       if (result.session) {
         router.replace('/');
         return;
       }
 
-      // De lo contrario, navegar a la pantalla de verificación OTP
+      // Si requiere confirmación por correo (Flujo D4 con type: 'signup')
       router.push({
         pathname: '/verify-otp',
         params: {
@@ -75,214 +187,249 @@ export default function RegisterScreen() {
         },
       } as any);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Error inesperado al registrar cuenta.');
+      triggerHaptic(Haptics.NotificationFeedbackType.Error);
+      setBannerError({
+        title: 'Error inesperado',
+        text: err?.message || 'Ocurrió un error al procesar el registro.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const showTerms = () => {
+    Alert.alert(
+      'Términos de uso',
+      'ClinicalCase es una plataforma de apoyo clínico obstétrico. La información médica proporcionada debe ser validada por profesionales de la salud capacitados.',
+      [{ text: 'Entendido' }]
+    );
+  };
+
+  const showPrivacy = () => {
+    Alert.alert(
+      'Política de Privacidad',
+      'Tus datos y registros clínicos se encuentran cifrados bajo rigurosos estándares de seguridad y protección de datos médicos.',
+      [{ text: 'Entendido' }]
+    );
+  };
+
   return (
-    <View style={styles.container}>
-      <LoginBackground />
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.scrollContent}>
-          <LoginBrand />
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.topWrap}>
+            {/* ── Barra Superior con Botón Volver ── */}
+            <View style={styles.topBar}>
+              <BackButton onPress={() => router.back()} />
+              <View style={styles.topBarSpacer} />
+            </View>
 
-            {/* ── Tarjeta de Registro ── */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Crear Cuenta</Text>
-              <Text style={styles.cardDescription}>
-                Regístrate con tu correo para acceder al asistente RAG y herramientas perinatales.
-              </Text>
+            {/* ── Tarjeta Neumórfica (D2) ── */}
+            <NeuCard style={styles.cardContainer}>
+              {/* Barra de acento */}
+              <AccentBar />
 
-              {/* Mensajes de Error */}
-              {errorMessage && (
-                <View style={styles.errorBox}>
-                  <Text style={styles.errorText}>⚠ {errorMessage}</Text>
+              {/* Título: Crea tu cuenta */}
+              <Heading accent="cuenta">Crea tu </Heading>
+
+              <View style={styles.subtitleWrap}>
+                <Subtitle>
+                  Regístrate para acceder a las herramientas perinatales y a los módulos clínicos.
+                </Subtitle>
+              </View>
+
+              {/* Banner de error general si ocurre */}
+              {bannerError && (
+                <View style={styles.bannerWrap}>
+                  <ErrorBanner
+                    title={bannerError.title}
+                    text={bannerError.text}
+                  />
                 </View>
               )}
 
-              {/* Formulario */}
-              <AuthInput
-                label="Nombre completo"
-                iconType="mail"
-                placeholder="Dra. María González"
-                value={fullName}
-                onChangeText={setFullName}
-                editable={!loading}
-              />
-
-              <AuthInput
-                label="Correo institucional / personal"
-                iconType="mail"
-                placeholder="usuario@gmail.com"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-                editable={!loading}
-              />
-
-              <AuthInput
-                label="Contraseña"
-                iconType="lock"
-                placeholder="Mínimo 6 caracteres"
-                isPassword
-                value={password}
-                onChangeText={setPassword}
-                editable={!loading}
-              />
-
-              {/* Botón Principal */}
-              <TouchableOpacity
-                style={[styles.submitButtonTouch, loading && styles.disabled]}
-                onPress={handleRegister}
-                disabled={loading}
-                activeOpacity={0.88}
-              >
-                <LinearGradient
-                  colors={['#00446E', '#0D5C91']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.submitGradient}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <View style={styles.submitContent}>
-                      <Text style={styles.submitText}>Crear mi cuenta</Text>
-                      <ArrowRight size={17} color="#FFFFFF" style={styles.submitArrow} />
-                    </View>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-
-              {/* Enlace de Retorno */}
-              <View style={styles.loginRow}>
-                <Text style={styles.loginPrompt}>¿Ya tienes una cuenta? </Text>
-                <TouchableOpacity
-                  onPress={() => router.replace('/login')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.loginLink}>Iniciar Sesión →</Text>
-                </TouchableOpacity>
+              {/* Botón de Google */}
+              <View style={styles.googleWrap}>
+                <GoogleButton
+                  onPress={handleGoogleRegister}
+                  title="Continuar con Google"
+                />
               </View>
-            </View>
 
-            <LoginFooter />
+              {/* Separador */}
+              <View style={styles.dividerWrap}>
+                <OrDivider text="o con tu correo" />
+              </View>
+
+              {/* Formulario */}
+              <View style={styles.formWrap}>
+                {/* Nombre completo */}
+                <NeuInput
+                  label="Nombre completo"
+                  icon={<UserIcon />}
+                  placeholder="Nombre y apellido"
+                  value={fullName}
+                  onChangeText={(val) => {
+                    setFullName(val);
+                    if (nameError) setNameError(undefined);
+                  }}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                  error={nameError}
+                />
+
+                {/* Correo institucional o personal */}
+                <NeuInput
+                  label="Correo institucional o personal"
+                  icon={<MailIcon />}
+                  placeholder="nombre@ulagos.cl"
+                  value={email}
+                  onChangeText={(val) => {
+                    setEmail(val);
+                    if (emailError) setEmailError(undefined);
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  error={emailError}
+                />
+
+                {/* Contraseña */}
+                <NeuInput
+                  label="Contraseña"
+                  icon={<LockIcon />}
+                  placeholder="Mínimo 8 caracteres"
+                  secure
+                  value={password}
+                  onChangeText={(val) => {
+                    setPassword(val);
+                    if (passwordError) setPasswordError(undefined);
+                  }}
+                  autoComplete="new-password"
+                  error={passwordError}
+                />
+              </View>
+
+              {/* Checkbox de Términos y Condiciones */}
+              <View style={styles.checkboxWrap}>
+                <NeuCheckbox
+                  checked={acceptedTerms}
+                  onChange={(val) => {
+                    setAcceptedTerms(val);
+                    if (termsError) setTermsError(undefined);
+                  }}
+                >
+                  Acepto los{' '}
+                  <NeuLink onPress={showTerms}>términos de uso</NeuLink> y la{' '}
+                  <NeuLink onPress={showPrivacy}>política de privacidad</NeuLink>.
+                </NeuCheckbox>
+
+                {termsError && (
+                  <View style={styles.termsErrorWrap}>
+                    <InlineError>{termsError}</InlineError>
+                  </View>
+                )}
+              </View>
+
+              {/* Botón Crear Cuenta */}
+              <View style={styles.buttonWrap}>
+                <NeuButton
+                  title="Crear cuenta"
+                  onPress={handleRegister}
+                  loading={loading}
+                  disabled={loading}
+                />
+              </View>
+
+              {/* Enlace Iniciar Sesión (Flujo D1) */}
+              <View style={styles.footerLinkWrap}>
+                <Text style={styles.footerLinkText}>
+                  ¿Ya tienes una cuenta?{' '}
+                  <NeuLink onPress={() => router.push('/login')}>
+                    Inicia sesión
+                  </NeuLink>
+                </Text>
+              </View>
+            </NeuCard>
           </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F3F7FC',
-  },
   safeArea: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  keyboardAvoid: {
     flex: 1,
   },
   scrollContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    flexGrow: 1,
+    paddingHorizontal: 22,
+    paddingTop: 16,
     paddingBottom: 24,
     maxWidth: 420,
     width: '100%',
     alignSelf: 'center',
-    justifyContent: 'center',
   },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 22,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#D8E4F2',
+  topWrap: {
+    flex: 1,
+    gap: 22,
   },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 4,
-    fontFamily: 'PlusJakartaSans-Bold',
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  cardDescription: {
-    fontSize: 12.5,
-    color: '#64748B',
-    lineHeight: 18,
-    marginBottom: 16,
-    fontFamily: 'PlusJakartaSans-Regular',
+  topBarSpacer: {
+    width: 46,
   },
-  errorBox: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 14,
+  cardContainer: {
+    width: '100%',
   },
-  errorText: {
-    fontSize: 12,
-    color: '#B91C1C',
-    fontFamily: 'PlusJakartaSans-Medium',
-  },
-  submitButtonTouch: {
+  subtitleWrap: {
     marginTop: 8,
-    marginBottom: 14,
-    borderRadius: 12,
-    shadowColor: '#00446E',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    elevation: 4,
   },
-  submitGradient: {
-    height: 48,
-    borderRadius: 12,
+  bannerWrap: {
+    marginTop: 16,
+  },
+  googleWrap: {
+    marginTop: 20,
+  },
+  dividerWrap: {
+    marginTop: 18,
+  },
+  formWrap: {
+    marginTop: 18,
+    gap: 14,
+  },
+  checkboxWrap: {
+    marginTop: 14,
+  },
+  termsErrorWrap: {
+    marginTop: 6,
+  },
+  buttonWrap: {
+    marginTop: 18,
+  },
+  footerLinkWrap: {
+    marginTop: 18,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  submitContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitText: {
-    color: '#FFFFFF',
-    fontSize: 14.5,
-    fontWeight: '600',
-    fontFamily: 'PlusJakartaSans-SemiBold',
-  },
-  submitArrow: {
-    marginLeft: 6,
-  },
-  disabled: {
-    opacity: 0.7,
-  },
-  loginRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  loginPrompt: {
-    fontSize: 12.5,
-    color: '#64748B',
-    fontFamily: 'PlusJakartaSans-Regular',
-  },
-  loginLink: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: '#0D5C91',
-    fontFamily: 'PlusJakartaSans-Bold',
+  footerLinkText: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    color: colors.muted,
   },
 });
