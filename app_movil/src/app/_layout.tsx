@@ -5,32 +5,52 @@ import { Platform } from 'react-native';
 import { Stack, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import {
+  BodoniModa_600SemiBold,
+  BodoniModa_800ExtraBold_Italic,
+} from '@expo-google-fonts/bodoni-moda';
+import {
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+  DMSans_500Medium_Italic,
+} from '@expo-google-fonts/dm-sans';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AppLoadingScreen, OfflineBanner } from '@/components/feedback';
+import { colors } from '@/ui/tokens';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// Tema Clínico Personalizado: Fondo #F3F7FC permanente para evitar parpadeos negros nativos
+// Tema Clínico Neumórfico Personalizado: Fondo #EEF2F6
 const ClinicalTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: '#F3F7FC',
-    card: '#FFFFFF',
-    text: '#0F172A',
-    border: '#D8E4F2',
+    background: colors.bg,
+    card: colors.bg,
+    text: colors.text,
+    border: 'rgba(163,177,198,0.3)',
   },
 };
 
 function RootNavigator() {
   const { loading } = useAuth();
+  const [fontsLoaded, fontError] = useFonts({
+    BodoniModa_600SemiBold,
+    BodoniModa_800ExtraBold_Italic,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+    DMSans_500Medium_Italic,
+  });
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && (fontsLoaded || fontError)) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [loading]);
+  }, [loading, fontsLoaded, fontError]);
 
   // Blindaje absoluto en Web: fijar pantalla 100%, anular pinch-to-zoom y bloquear desplazamientos por teclado
   useEffect(() => {
@@ -76,7 +96,7 @@ function RootNavigator() {
             touch-action: manipulation !important;
             -webkit-user-select: none !important;
             user-select: none !important;
-            background-color: #F3F7FC !important;
+            background-color: ${colors.bg} !important;
           }
           input, textarea, select {
             font-size: 16px !important;
@@ -102,7 +122,7 @@ function RootNavigator() {
     }
   }, []);
 
-  if (loading) {
+  if (loading || (!fontsLoaded && !fontError)) {
     return <AppLoadingScreen message="Iniciando sesión segura..." />;
   }
 
