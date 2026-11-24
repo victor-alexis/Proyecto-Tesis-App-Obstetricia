@@ -19,7 +19,7 @@ import {
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { OfflineBanner } from '@/components/feedback';
-import { colors } from '@/components/ui';
+import { colors, GlobalEmptyInputAccessory } from '@/components/ui';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -130,6 +130,7 @@ function RootNavigator() {
     <>
       <StatusBar style="dark" />
       <OfflineBanner />
+      <GlobalEmptyInputAccessory />
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(app)" options={{ headerShown: false }} />

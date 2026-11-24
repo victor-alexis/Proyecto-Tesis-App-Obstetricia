@@ -340,7 +340,8 @@ export default function RegisterScreen() {
                           if (nameError) setNameError(undefined);
                         }}
                         autoCapitalize="words"
-                        autoComplete="name"
+                        autoComplete="off"
+                        textContentType="none"
                         returnKeyType="next"
                         onSubmitEditing={() => emailInputRef.current?.focus()}
                         error={nameError}
@@ -362,7 +363,8 @@ export default function RegisterScreen() {
                         keyboardType="email-address"
                         autoCapitalize="none"
                         autoCorrect={false}
-                        autoComplete="email"
+                        autoComplete="off"
+                        textContentType="none"
                         returnKeyType="next"
                         onSubmitEditing={() => passwordInputRef.current?.focus()}
                         error={emailError}

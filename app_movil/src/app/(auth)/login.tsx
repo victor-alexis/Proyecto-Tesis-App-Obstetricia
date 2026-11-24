@@ -341,7 +341,8 @@ export default function LoginScreen() {
                         keyboardType="email-address"
                         autoCapitalize="none"
                         autoCorrect={false}
-                        autoComplete="email"
+                        autoComplete="off"
+                        textContentType="none"
                         returnKeyType="next"
                         onSubmitEditing={() => passwordInputRef.current?.focus()}
                       />

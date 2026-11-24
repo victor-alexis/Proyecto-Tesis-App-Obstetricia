@@ -13,7 +13,19 @@ import { colors, fonts, radius, shadows } from './tokens';
 import { EyeIcon, EyeOffIcon, InfoIcon } from './icons';
 import { useKeyboardScroll } from './motion';
 
-const EMPTY_ACCESSORY_ID = 'CC_EmptyAccessoryBar';
+export const EMPTY_ACCESSORY_ID = 'CC_EmptyAccessoryBar';
+export const IOS_EMPTY_ACCESSORY_ID = Platform.OS === 'ios' ? EMPTY_ACCESSORY_ID : undefined;
+
+/**
+ * Accessory view global único (altura 0) para suprimir en iOS la barra blanca
+ * predeterminada `< > (✓)` sin colisiones de `nativeID` duplicados.
+ */
+export const GlobalEmptyInputAccessory = () =>
+  Platform.OS === 'ios' ? (
+    <InputAccessoryView nativeID={EMPTY_ACCESSORY_ID} backgroundColor="transparent">
+      <View style={{ height: 0, overflow: 'hidden' }} />
+    </InputAccessoryView>
+  ) : null;
 
 export interface NeuInputProps extends TextInputProps {
   label: string;
@@ -59,8 +71,8 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
             secureTextEntry={hidden}
             autoCapitalize="none"
             selectionColor={colors.accent}
-            inputAccessoryViewID={Platform.OS === 'ios' ? EMPTY_ACCESSORY_ID : undefined}
-            autoComplete={props.autoComplete ?? (secure ? 'off' : undefined)}
+            inputAccessoryViewID={IOS_EMPTY_ACCESSORY_ID}
+            autoComplete={props.autoComplete ?? 'off'}
             textContentType={props.textContentType ?? (secure ? 'oneTimeCode' : 'none')}
             spellCheck={false}
             autoCorrect={false}
@@ -87,11 +99,6 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
             </Pressable>
           )}
         </View>
-        {Platform.OS === 'ios' && (
-          <InputAccessoryView nativeID={EMPTY_ACCESSORY_ID}>
-            <View style={{ height: 0 }} />
-          </InputAccessoryView>
-        )}
         {!!error && <InlineError>{error}</InlineError>}
       </View>
     );
@@ -196,6 +203,7 @@ export const OtpInput = ({
           keyboardType="number-pad"
           inputMode="numeric"
           maxLength={i === 0 ? length : 1}
+          inputAccessoryViewID={IOS_EMPTY_ACCESSORY_ID}
           autoComplete={i === 0 ? 'one-time-code' : 'off'}
           textContentType={i === 0 ? 'oneTimeCode' : 'none'}
           accessibilityLabel={`Dígito ${i + 1} de ${length}`}

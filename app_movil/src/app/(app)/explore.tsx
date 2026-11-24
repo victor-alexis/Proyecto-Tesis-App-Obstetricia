@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { IOS_EMPTY_ACCESSORY_ID } from '@/components/ui';
 
 export default function ClinicalQueryScreen() {
   const [query, setQuery] = useState('');
@@ -52,6 +53,10 @@ export default function ClinicalQueryScreen() {
             placeholderTextColor="#A0AEC0"
             value={query}
             onChangeText={setQuery}
+            inputAccessoryViewID={IOS_EMPTY_ACCESSORY_ID}
+            autoComplete="off"
+            textContentType="none"
+            autoCorrect={false}
           />
           <TouchableOpacity
             style={styles.searchButton}
