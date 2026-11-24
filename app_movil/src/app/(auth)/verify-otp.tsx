@@ -39,6 +39,7 @@ import {
   SoftBackground,
   At,
   useScreenTimeline,
+  useKeyboardAwareScroll,
   T_FAST,
   colors,
   fonts,
@@ -53,6 +54,7 @@ export default function VerifyOtpScreen() {
   const type = params.type === 'recovery' ? 'recovery' : 'signup';
   const isRecovery = type === 'recovery';
   const t = useScreenTimeline();
+  const { scrollRef, keyboardHeight } = useKeyboardAwareScroll();
 
   const {
     verifySignupOtp,
@@ -60,6 +62,13 @@ export default function VerifyOtpScreen() {
     verifyRecoveryOtp,
     sendPasswordResetOtp,
   } = useAuth();
+
+  // Guardián: si no hay un correo en los parámetros, la pantalla es inválida
+  useEffect(() => {
+    if (!email) {
+      router.replace(isRecovery ? '/forgot-password' : '/login');
+    }
+  }, [email, isRecovery]);
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -217,9 +226,15 @@ export default function VerifyOtpScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            ref={scrollRef as any}
+            contentContainerStyle={[
+              styles.scrollContent,
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 30 },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           >
             {/* ── Barra Superior con Botón Volver ── */}
             <At t={t} start={T_FAST.topBar} dy={8}>

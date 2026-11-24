@@ -10,67 +10,76 @@ import {
 import { colors, fonts, radius, shadows } from './tokens';
 import { EyeIcon, EyeOffIcon, InfoIcon } from './icons';
 
-/** Campo hundido. `error` muestra aro y mensaje de error accesible. */
-export const NeuInput = ({
-  label,
-  icon,
-  secure,
-  error,
-  rightLabel,
-  ...props
-}: TextInputProps & {
+export interface NeuInputProps extends TextInputProps {
   label: string;
   icon: ReactNode;
   secure?: boolean;
   error?: string;
   rightLabel?: ReactNode;
-}) => {
-  const [focused, setFocused] = useState(false);
-  const [hidden, setHidden] = useState(!!secure);
-  const shadow = error ? shadows.invalid : focused ? shadows.focus : shadows.inset;
+}
 
-  return (
-    <View style={{ gap: 8 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Text style={s.label}>{label}</Text>
-        {rightLabel}
-      </View>
-      <View style={s.fieldWrap}>
-        <View style={s.fieldIcon} pointerEvents="none">
-          {icon}
+/** Campo hundido. `error` muestra aro y mensaje de error accesible. Soporta ref para navegación por teclado. */
+export const NeuInput = React.forwardRef<any, NeuInputProps>(
+  (
+    {
+      label,
+      icon,
+      secure,
+      error,
+      rightLabel,
+      ...props
+    },
+    ref
+  ) => {
+    const [focused, setFocused] = useState(false);
+    const [hidden, setHidden] = useState(!!secure);
+    const shadow = error ? shadows.invalid : focused ? shadows.focus : shadows.inset;
+
+    return (
+      <View style={{ gap: 8 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <Text style={s.label}>{label}</Text>
+          {rightLabel}
         </View>
-        <TextInput
-          accessibilityLabel={label}
-          placeholderTextColor={colors.muted}
-          secureTextEntry={hidden}
-          autoCapitalize="none"
-          selectionColor={colors.accent}
-          onFocus={(e) => {
-            setFocused(true);
-            props.onFocus?.(e);
-          }}
-          onBlur={(e) => {
-            setFocused(false);
-            props.onBlur?.(e);
-          }}
-          {...props}
-          style={[s.input, { boxShadow: shadow, paddingRight: secure ? 52 : 20 }, props.style]}
-        />
-        {secure && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={hidden ? 'Mostrar contraseña' : 'Ocultar contraseña'}
-            onPress={() => setHidden((h) => !h)}
-            style={s.eye}
-          >
-            {hidden ? <EyeIcon /> : <EyeOffIcon />}
-          </Pressable>
-        )}
+        <View style={s.fieldWrap}>
+          <View style={s.fieldIcon} pointerEvents="none">
+            {icon}
+          </View>
+          <TextInput
+            ref={ref as any}
+            accessibilityLabel={label}
+            placeholderTextColor={colors.muted}
+            secureTextEntry={hidden}
+            autoCapitalize="none"
+            selectionColor={colors.accent}
+            onFocus={(e) => {
+              setFocused(true);
+              props.onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setFocused(false);
+              props.onBlur?.(e);
+            }}
+            {...props}
+            style={[s.input, { boxShadow: shadow, paddingRight: secure ? 52 : 20 }, props.style]}
+          />
+          {secure && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={hidden ? 'Mostrar contraseña' : 'Ocultar contraseña'}
+              onPress={() => setHidden((h) => !h)}
+              style={s.eye}
+            >
+              {hidden ? <EyeIcon /> : <EyeOffIcon />}
+            </Pressable>
+          )}
+        </View>
+        {!!error && <InlineError>{error}</InlineError>}
       </View>
-      {!!error && <InlineError>{error}</InlineError>}
-    </View>
-  );
-};
+    );
+  }
+);
+NeuInput.displayName = 'NeuInput';
 
 export const InlineError = ({ children }: { children: string }) => (
   <View

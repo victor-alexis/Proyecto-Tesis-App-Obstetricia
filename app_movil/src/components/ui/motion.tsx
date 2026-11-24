@@ -1,9 +1,12 @@
 // Animaciones de ClinicalCase: splash + aparición escalonada de campos.
 // Una sola línea de tiempo (segundos) en un shared value; cada elemento deriva su estilo de ella.
 // Requiere react-native-reanimated.
-import React, { ReactNode, useEffect, useRef } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import {
+  Keyboard,
   LayoutChangeEvent,
+  Platform,
+  ScrollView,
   StyleProp,
   StyleSheet,
   View,
@@ -105,6 +108,51 @@ export function useTimeline(opts: { once?: boolean } = {}) {
   }, [skip, t]);
 
   return t;
+}
+
+/**
+ * Hook para auto-scroll y adaptación al teclado.
+ * Asegura que ningún campo quede tapado al escribir en móviles.
+ */
+export function useKeyboardAwareScroll() {
+  const scrollRef = useRef<any>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const scrollToInput = (yOffset: number) => {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, yOffset),
+        animated: true,
+      });
+    }, 70);
+  };
+
+  return {
+    scrollRef,
+    keyboardHeight,
+    isKeyboardVisible: keyboardHeight > 0,
+    scrollToInput,
+  };
 }
 
 /** Línea de tiempo rápida para pantallas individuales y navegación fluida. */

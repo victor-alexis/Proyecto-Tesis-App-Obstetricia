@@ -38,6 +38,7 @@ import {
   SoftBackground,
   At,
   useScreenTimeline,
+  useKeyboardAwareScroll,
   T_FAST,
   colors,
   fonts,
@@ -46,6 +47,7 @@ import {
 export default function ForgotPasswordScreen() {
   const { sendPasswordResetOtp } = useAuth();
   const t = useScreenTimeline();
+  const { scrollRef, keyboardHeight, scrollToInput } = useKeyboardAwareScroll();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -130,9 +132,15 @@ export default function ForgotPasswordScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            ref={scrollRef as any}
+            contentContainerStyle={[
+              styles.scrollContent,
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 30 },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           >
             {/* ── Barra Superior con Botón Volver ── */}
             <At t={t} start={T_FAST.topBar} dy={8}>
@@ -192,6 +200,9 @@ export default function ForgotPasswordScreen() {
                       autoCapitalize="none"
                       autoCorrect={false}
                       autoComplete="email"
+                      returnKeyType="send"
+                      onFocus={() => scrollToInput(100)}
+                      onSubmitEditing={handleSendCode}
                       error={emailError}
                     />
                   </At>

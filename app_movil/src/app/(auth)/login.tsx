@@ -41,6 +41,7 @@ import {
   At,
   T,
   useTimeline,
+  useKeyboardAwareScroll,
   colors,
   fonts,
 } from '@/components/ui';
@@ -49,9 +50,11 @@ const MAX_ATTEMPTS = 3;
 const BLOCK_DURATION_SECONDS = 60;
 
 export default function LoginScreen() {
-  const { signInWithGoogle, signInWithPassword, session } = useAuth();
+  const { signInWithGoogle, signInWithPassword, session, isRecovering } = useAuth();
   const pathname = usePathname();
   const t = useTimeline({ once: true }); // Animación completa solo la primera vez por sesión
+  const { scrollRef, keyboardHeight, scrollToInput } = useKeyboardAwareScroll();
+  const passwordInputRef = useRef<any>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,12 +69,12 @@ export default function LoginScreen() {
 
   const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Redirigir al home únicamente si ya hay sesión autenticada activa y se encuentra en /login
+  // Redirigir al home únicamente si ya hay sesión autenticada activa y no está en recuperación
   useEffect(() => {
-    if (session && pathname === '/login') {
+    if (session && pathname === '/login' && !isRecovering) {
       router.replace('/');
     }
-  }, [session, pathname]);
+  }, [session, pathname, isRecovering]);
 
   // Manejo del contador regresivo en estado de bloqueo temporal
   useEffect(() => {
@@ -253,11 +256,17 @@ export default function LoginScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            ref={scrollRef as any}
+            contentContainerStyle={[
+              styles.scrollContent,
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 30 },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           >
-            <View style={styles.contentWrap}>
+            <View style={[styles.contentWrap, keyboardHeight > 0 && { justifyContent: 'flex-start' }]}>
               {/* ── Encabezado de Marca Animado (Wordmark letra a letra + Subtítulo) ── */}
               <AnimatedWordmark t={t} size={55} />
 
@@ -331,11 +340,15 @@ export default function LoginScreen() {
                         autoCapitalize="none"
                         autoCorrect={false}
                         autoComplete="email"
+                        returnKeyType="next"
+                        onFocus={() => scrollToInput(120)}
+                        onSubmitEditing={() => passwordInputRef.current?.focus()}
                       />
                     </At>
 
                     <At t={t} start={T.pass}>
                       <NeuInput
+                        ref={passwordInputRef}
                         label="Contraseña"
                         icon={
                           <LockIcon
@@ -350,6 +363,9 @@ export default function LoginScreen() {
                           clearCredentialError();
                         }}
                         autoComplete="current-password"
+                        returnKeyType="go"
+                        onFocus={() => scrollToInput(220)}
+                        onSubmitEditing={handleEmailLogin}
                         rightLabel={
                           <NeuLink
                             italic

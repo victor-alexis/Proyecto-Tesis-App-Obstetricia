@@ -6,7 +6,7 @@
  * Estados: Normal, Correo ya registrado, Contraseña débil, Términos sin aceptar, Cargando.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -36,12 +36,15 @@ import {
   NeuLink,
   InlineError,
   ErrorBanner,
+  StrengthMeter,
+  Requirement,
   UserIcon,
   MailIcon,
   LockIcon,
   SoftBackground,
   At,
   useScreenTimeline,
+  useKeyboardAwareScroll,
   T_FAST,
   colors,
   fonts,
@@ -50,6 +53,9 @@ import {
 export default function RegisterScreen() {
   const { signUpWithEmail, signInWithGoogle } = useAuth();
   const t = useScreenTimeline();
+  const { scrollRef, keyboardHeight, scrollToInput } = useKeyboardAwareScroll();
+  const emailInputRef = useRef<any>(null);
+  const passwordInputRef = useRef<any>(null);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -63,6 +69,36 @@ export default function RegisterScreen() {
   const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
   const [termsError, setTermsError] = useState<string | undefined>(undefined);
   const [bannerError, setBannerError] = useState<{ title: string; text?: string } | null>(null);
+
+  // Requisitos dinámicos de contraseña (alineado con reset-password.tsx)
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
+  // Medidor de seguridad (0 a 4)
+  const computeStrength = () => {
+    if (!password) return { level: 0, label: 'Baja' };
+    let score = 0;
+    if (hasMinLength) score++;
+    if (hasUppercase) score++;
+    if (hasNumber) score++;
+    if (/[^A-Za-z0-9]/.test(password) || password.length >= 12) score++;
+
+    switch (score) {
+      case 0:
+      case 1:
+        return { level: 1, label: 'Baja' };
+      case 2:
+        return { level: 2, label: 'Media' };
+      case 3:
+        return { level: 3, label: 'Fuerte' };
+      case 4:
+      default:
+        return { level: 4, label: 'Muy fuerte' };
+    }
+  };
+
+  const { level: strengthLevel, label: strengthLabel } = computeStrength();
 
   const triggerHaptic = (type: Haptics.NotificationFeedbackType) => {
     if (Platform.OS !== 'web') {
@@ -119,12 +155,12 @@ export default function RegisterScreen() {
       setEmailError(undefined);
     }
 
-    // Validación Contraseña (mínimo 8 caracteres según D2)
+    // Validación Contraseña (criterios unificados con reset-password: 8+ chars, mayúscula, número)
     if (!password) {
       setPasswordError('Por favor ingresa una contraseña');
       isValid = false;
-    } else if (password.length < 8) {
-      setPasswordError('La contraseña debe tener al menos 8 caracteres');
+    } else if (!hasMinLength || !hasUppercase || !hasNumber) {
+      setPasswordError('La contraseña no cumple con los requisitos de seguridad');
       isValid = false;
     } else {
       setPasswordError(undefined);
@@ -231,9 +267,15 @@ export default function RegisterScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            ref={scrollRef as any}
+            contentContainerStyle={[
+              styles.scrollContent,
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 40 },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           >
             <View style={styles.topWrap}>
               {/* ── Barra Superior con Botón Volver ── */}
@@ -297,6 +339,9 @@ export default function RegisterScreen() {
                         }}
                         autoCapitalize="words"
                         autoComplete="name"
+                        returnKeyType="next"
+                        onFocus={() => scrollToInput(120)}
+                        onSubmitEditing={() => emailInputRef.current?.focus()}
                         error={nameError}
                       />
                     </At>
@@ -304,6 +349,7 @@ export default function RegisterScreen() {
                     {/* Correo institucional o personal */}
                     <At t={t} start={T_FAST.field2}>
                       <NeuInput
+                        ref={emailInputRef}
                         label="Correo institucional o personal"
                         icon={<MailIcon />}
                         placeholder="nombre@ulagos.cl"
@@ -316,6 +362,9 @@ export default function RegisterScreen() {
                         autoCapitalize="none"
                         autoCorrect={false}
                         autoComplete="email"
+                        returnKeyType="next"
+                        onFocus={() => scrollToInput(200)}
+                        onSubmitEditing={() => passwordInputRef.current?.focus()}
                         error={emailError}
                       />
                     </At>
@@ -323,6 +372,7 @@ export default function RegisterScreen() {
                     {/* Contraseña */}
                     <At t={t} start={T_FAST.field3}>
                       <NeuInput
+                        ref={passwordInputRef}
                         label="Contraseña"
                         icon={<LockIcon />}
                         placeholder="Mínimo 8 caracteres"
@@ -333,10 +383,27 @@ export default function RegisterScreen() {
                           if (passwordError) setPasswordError(undefined);
                         }}
                         autoComplete="new-password"
+                        returnKeyType="done"
+                        onFocus={() => scrollToInput(300)}
+                        onSubmitEditing={handleRegister}
                         error={passwordError}
                       />
                     </At>
                   </View>
+
+                  {/* Medidor de Seguridad dinámico */}
+                  {password.length > 0 && (
+                    <At t={t} start={T_FAST.meter} style={styles.strengthWrap}>
+                      <StrengthMeter level={strengthLevel} label={strengthLabel} />
+                    </At>
+                  )}
+
+                  {/* Lista de Requisitos de Contraseña en tiempo real */}
+                  <At t={t} start={T_FAST.checkbox - 0.04} style={styles.requirementsWrap}>
+                    <Requirement ok={hasMinLength}>Mínimo 8 caracteres</Requirement>
+                    <Requirement ok={hasUppercase}>Una letra mayúscula</Requirement>
+                    <Requirement ok={hasNumber}>Un número</Requirement>
+                  </At>
 
                   {/* Checkbox de Términos y Condiciones */}
                   <At t={t} start={T_FAST.checkbox} style={styles.checkboxWrap}>
@@ -439,8 +506,15 @@ const styles = StyleSheet.create({
     marginTop: 18,
     gap: 14,
   },
-  checkboxWrap: {
+  strengthWrap: {
     marginTop: 14,
+  },
+  requirementsWrap: {
+    marginTop: 14,
+    gap: 8,
+  },
+  checkboxWrap: {
+    marginTop: 16,
   },
   termsErrorWrap: {
     marginTop: 6,

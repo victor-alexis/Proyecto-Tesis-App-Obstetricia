@@ -8,7 +8,7 @@
  * - D3.3: Confirmación de éxito con avisos de cuenta protegida y cierre de otras sesiones.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -44,14 +44,26 @@ import {
   SoftBackground,
   At,
   useScreenTimeline,
+  useKeyboardAwareScroll,
   T_FAST,
   colors,
   fonts,
 } from '@/components/ui';
 
 export default function ResetPasswordScreen() {
-  const { updatePassword, signOut } = useAuth();
+  const { updatePassword, signOut, session, isRecovering } = useAuth();
   const t = useScreenTimeline();
+  const { scrollRef, keyboardHeight, scrollToInput } = useKeyboardAwareScroll();
+  const confirmInputRef = useRef<any>(null);
+
+  // Guardián estricto de seguridad clínica:
+  // Si no hay sesión activa de recuperación o el correo no fue validado previamente,
+  // se deniega el acceso y se redirige a solicitar el código OTP.
+  useEffect(() => {
+    if (!session || !isRecovering) {
+      router.replace('/forgot-password');
+    }
+  }, [session, isRecovering]);
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -255,9 +267,15 @@ export default function ResetPasswordScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            ref={scrollRef as any}
+            contentContainerStyle={[
+              styles.scrollContent,
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 40 },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           >
             {/* Barra Superior */}
             <At t={t} start={T_FAST.topBar} dy={8}>
@@ -306,12 +324,16 @@ export default function ResetPasswordScreen() {
                           if (passwordError) setPasswordError(undefined);
                         }}
                         autoComplete="new-password"
+                        returnKeyType="next"
+                        onFocus={() => scrollToInput(120)}
+                        onSubmitEditing={() => confirmInputRef.current?.focus()}
                         error={passwordError}
                       />
                     </At>
 
                     <At t={t} start={T_FAST.field2}>
                       <NeuInput
+                        ref={confirmInputRef}
                         label="Confirmar contraseña"
                         icon={<LockIcon />}
                         placeholder="Repite tu contraseña"
@@ -322,6 +344,9 @@ export default function ResetPasswordScreen() {
                           if (confirmError) setConfirmError(undefined);
                         }}
                         autoComplete="new-password"
+                        returnKeyType="done"
+                        onFocus={() => scrollToInput(200)}
+                        onSubmitEditing={handleSavePassword}
                         error={confirmError}
                       />
                     </At>
