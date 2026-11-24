@@ -12,8 +12,9 @@ import React, {
 import {
   Keyboard,
   LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Platform,
-  ScrollView,
   StyleProp,
   StyleSheet,
   View,
@@ -123,8 +124,10 @@ export function useTimeline(opts: { once?: boolean } = {}) {
 export interface KeyboardScrollContextType {
   scrollRef: React.RefObject<any>;
   keyboardHeight: number;
+  webPaddingBottom: number;
   isKeyboardVisible: boolean;
   scrollToField: (targetViewRef: any) => void;
+  onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
 export const KeyboardScrollContext = createContext<KeyboardScrollContextType | null>(null);
@@ -132,14 +135,67 @@ export const KeyboardScrollContext = createContext<KeyboardScrollContextType | n
 export const useKeyboardScroll = () => useContext(KeyboardScrollContext);
 
 /**
- * Hook para auto-scroll y adaptación al teclado.
- * Asegura que ningún campo quede tapado al escribir en móviles.
+ * Hook para auto-scroll y adaptación al teclado (Nativo + Web/Safari PWA).
+ * Detecta la altura real del teclado (Keyboard en nativo, visualViewport en web),
+ * rastrea la posición actual del scroll y desplaza exactamente el campo enfocado
+ * por encima del teclado y su barra auxiliar.
  */
 export function useKeyboardAwareScroll(): KeyboardScrollContextType {
   const scrollRef = useRef<any>(null);
+  const scrollYRef = useRef(0);
+  const focusedTargetRef = useRef<any>(null);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialWebHeightRef = useRef(
+    Platform.OS === 'web' && typeof window !== 'undefined' ? window.innerHeight : 0
+  );
+  const { height: windowHeight } = useWindowDimensions();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [webPaddingBottom, setWebPaddingBottom] = useState(0);
 
   useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (!initialWebHeightRef.current) {
+        initialWebHeightRef.current = window.innerHeight;
+      }
+      const vv = window.visualViewport;
+      const updateWebKeyboard = () => {
+        const currentVV = window.visualViewport;
+        const vvHeight = currentVV ? currentVV.height : window.innerHeight;
+        const overlayDiff = window.innerHeight - vvHeight;
+        const layoutDiff = initialWebHeightRef.current - window.innerHeight;
+        const activeIsInput =
+          typeof document !== 'undefined' &&
+          (document.activeElement?.tagName === 'INPUT' ||
+            document.activeElement?.tagName === 'TEXTAREA');
+
+        if (overlayDiff > 110) {
+          const h = Math.round(overlayDiff);
+          setWebPaddingBottom((prev) => (prev === h ? prev : h));
+          setKeyboardHeight((prev) => (prev === h ? prev : h));
+        } else if (layoutDiff > 120 && activeIsInput) {
+          const h = Math.round(layoutDiff);
+          setWebPaddingBottom(0);
+          setKeyboardHeight((prev) => (prev === h ? prev : h));
+        } else {
+          setWebPaddingBottom(0);
+          setKeyboardHeight(0);
+          if (!activeIsInput) {
+            focusedTargetRef.current = null;
+          }
+        }
+      };
+
+      vv?.addEventListener('resize', updateWebKeyboard);
+      vv?.addEventListener('scroll', updateWebKeyboard);
+      window.addEventListener('resize', updateWebKeyboard);
+
+      return () => {
+        vv?.removeEventListener('resize', updateWebKeyboard);
+        vv?.removeEventListener('scroll', updateWebKeyboard);
+        window.removeEventListener('resize', updateWebKeyboard);
+      };
+    }
+
     const showSub = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
       (e) => {
@@ -150,6 +206,7 @@ export function useKeyboardAwareScroll(): KeyboardScrollContextType {
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
         setKeyboardHeight(0);
+        focusedTargetRef.current = null;
       }
     );
 
@@ -159,41 +216,115 @@ export function useKeyboardAwareScroll(): KeyboardScrollContextType {
     };
   }, []);
 
-  const scrollToField = (targetViewRef: any) => {
-    setTimeout(() => {
-      const target = targetViewRef?.current || targetViewRef;
-      if (!target || !scrollRef.current) return;
+  const performScroll = (targetViewRef: any, currentKbHeight: number) => {
+    if (scrollTimerRef.current) {
+      clearTimeout(scrollTimerRef.current);
+    }
 
-      if (Platform.OS === 'web' && typeof target.scrollIntoView === 'function') {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    scrollTimerRef.current = setTimeout(() => {
+      const target = targetViewRef?.current || targetViewRef;
+      const scrollNode = scrollRef.current;
+      if (!target || !scrollNode) return;
+
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const scrollEl = scrollNode.getScrollableNode?.() ?? scrollNode;
+        const targetEl = target as HTMLElement;
+        if (
+          typeof scrollEl?.scrollTo === 'function' &&
+          typeof targetEl?.getBoundingClientRect === 'function'
+        ) {
+          const vv = window.visualViewport;
+          const visibleTop = (vv ? vv.offsetTop : 0) + 16;
+          const visibleH = vv ? vv.height : window.innerHeight;
+          const kbActive = currentKbHeight > 0 || window.innerHeight - visibleH > 110;
+          const visibleBottom = visibleTop + visibleH - (kbActive ? 74 : 24);
+          const rect = targetEl.getBoundingClientRect();
+
+          if (rect.bottom > visibleBottom || rect.top < visibleTop) {
+            const desiredTop =
+              visibleTop + Math.max(16, (visibleBottom - visibleTop - rect.height) * 0.35);
+            const delta = rect.top - desiredTop;
+            scrollEl.scrollTo({
+              top: Math.max(0, (scrollEl.scrollTop || 0) + delta),
+              behavior: 'smooth',
+            });
+          }
+          return;
+        }
+        if (typeof targetEl?.scrollIntoView === 'function') {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      if (
+        typeof scrollNode.measureInWindow === 'function' &&
+        typeof target.measureInWindow === 'function'
+      ) {
+        scrollNode.measureInWindow((_sx: number, sy: number, _sw: number, sh: number) => {
+          target.measureInWindow((_tx: number, ty: number, _tw: number, th: number) => {
+            // Si el ScrollView aún conserva casi toda la altura de ventana, descontamos el teclado
+            const alreadyShrunk = currentKbHeight > 0 && sh < windowHeight - currentKbHeight + 80;
+            const effectiveVisibleH =
+              currentKbHeight > 0 && !alreadyShrunk
+                ? Math.max(180, sh - currentKbHeight)
+                : Math.max(180, sh);
+
+            const bottomLimit = sy + effectiveVisibleH - 28;
+            const topLimit = sy + 16;
+
+            if (ty + th > bottomLimit || ty < topLimit) {
+              const fieldContentTop = scrollYRef.current + (ty - sy);
+              const comfortableOffset = Math.max(20, (effectiveVisibleH - th) * 0.35);
+              const nextY = Math.max(0, fieldContentTop - comfortableOffset);
+              scrollNode.scrollTo?.({ y: nextY, animated: true });
+            }
+          });
+        });
         return;
       }
 
       target.measureLayout?.(
-        scrollRef.current,
+        scrollNode,
         (_left: number, top: number) => {
-          scrollRef.current?.scrollTo({
+          scrollNode.scrollTo?.({
             y: Math.max(0, top - 35),
             animated: true,
           });
         },
-        () => {
-          target.measureInWindow?.((_x: number, y: number) => {
-            scrollRef.current?.scrollTo({
-              y: Math.max(0, y - 80),
-              animated: true,
-            });
-          });
-        }
+        () => {}
       );
     }, 110);
+  };
+
+  useEffect(() => {
+    if (keyboardHeight > 0 && focusedTargetRef.current) {
+      performScroll(focusedTargetRef.current, keyboardHeight);
+    }
+  }, [keyboardHeight]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
+
+  const scrollToField = (targetViewRef: any) => {
+    focusedTargetRef.current = targetViewRef;
+    performScroll(targetViewRef, keyboardHeight);
+  };
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollYRef.current = e.nativeEvent.contentOffset.y;
   };
 
   return {
     scrollRef,
     keyboardHeight,
+    webPaddingBottom,
     isKeyboardVisible: keyboardHeight > 0,
     scrollToField,
+    onScroll,
   };
 }
 

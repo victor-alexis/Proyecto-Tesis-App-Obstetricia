@@ -130,15 +130,23 @@ export default function ForgotPasswordScreen() {
 
         <SafeAreaView style={styles.safeArea}>
           <KeyboardAvoidingView
-            style={styles.keyboardAvoid}
+            style={[
+              styles.keyboardAvoid,
+              Platform.OS === 'web' && kb.webPaddingBottom > 0 && { paddingBottom: kb.webPaddingBottom },
+            ]}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
           >
             <ScrollView
               ref={kb.scrollRef as any}
+              onScroll={kb.onScroll}
+              scrollEventThrottle={16}
               contentContainerStyle={[
                 styles.scrollContent,
-                kb.isKeyboardVisible && { paddingBottom: kb.keyboardHeight + 60 },
+                kb.isKeyboardVisible && {
+                  justifyContent: 'flex-start',
+                  paddingBottom: Platform.OS === 'android' ? kb.keyboardHeight + 60 : 48,
+                },
               ]}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
@@ -153,7 +161,12 @@ export default function ForgotPasswordScreen() {
               </At>
 
               {/* ── Contenedor Central con Tarjeta Neumórfica (D3) ── */}
-              <View style={[styles.cardWrapper, kb.isKeyboardVisible && { justifyContent: 'flex-start' }]}>
+              <View
+                style={[
+                  styles.cardWrapper,
+                  kb.isKeyboardVisible && { flex: 0, justifyContent: 'flex-start' },
+                ]}
+              >
               <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
                 <NeuCard style={styles.card}>
                   {/* Placa circular con icono de Llave */}

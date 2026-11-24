@@ -44,6 +44,13 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
       secure,
       error,
       rightLabel,
+      keyboardType,
+      inputMode,
+      autoComplete,
+      textContentType,
+      style,
+      onFocus,
+      onBlur,
       ...props
     },
     ref
@@ -52,7 +59,15 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
     const [hidden, setHidden] = useState(!!secure);
     const containerRef = useRef<any>(null);
     const kb = useKeyboardScroll();
+    const isWeb = Platform.OS === 'web';
     const shadow = error ? shadows.invalid : focused ? shadows.focus : shadows.inset;
+
+    // En Web/Safari iOS: usar inputMode="email" en lugar de type="email" y -webkit-text-security en lugar de type="password"
+    // evita que Safari dispare los popups nativos de "contraseña de este sitio" y "¿Usar contraseña segura?".
+    const resolvedKeyboardType =
+      isWeb && keyboardType === 'email-address' ? undefined : keyboardType;
+    const resolvedInputMode =
+      inputMode ?? (keyboardType === 'email-address' ? 'email' : undefined);
 
     return (
       <View ref={containerRef as any} style={{ gap: 8 }}>
@@ -68,25 +83,32 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
             ref={ref as any}
             accessibilityLabel={label}
             placeholderTextColor={colors.muted}
-            secureTextEntry={hidden}
             autoCapitalize="none"
             selectionColor={colors.accent}
-            inputAccessoryViewID={IOS_EMPTY_ACCESSORY_ID}
-            autoComplete={props.autoComplete ?? 'off'}
-            textContentType={props.textContentType ?? (secure ? 'oneTimeCode' : 'none')}
             spellCheck={false}
             autoCorrect={false}
+            {...props}
+            keyboardType={resolvedKeyboardType}
+            inputMode={resolvedInputMode}
+            secureTextEntry={isWeb ? false : hidden}
+            inputAccessoryViewID={IOS_EMPTY_ACCESSORY_ID}
+            autoComplete={autoComplete ?? 'off'}
+            textContentType={textContentType ?? (secure ? 'oneTimeCode' : 'none')}
             onFocus={(e) => {
               setFocused(true);
               kb?.scrollToField(containerRef);
-              props.onFocus?.(e);
+              onFocus?.(e);
             }}
             onBlur={(e) => {
               setFocused(false);
-              props.onBlur?.(e);
+              onBlur?.(e);
             }}
-            {...props}
-            style={[s.input, { boxShadow: shadow, paddingRight: secure ? 52 : 20 }, props.style]}
+            style={[
+              s.input,
+              { boxShadow: shadow, paddingRight: secure ? 52 : 20 },
+              isWeb && hidden ? ({ WebkitTextSecurity: 'disc' } as any) : null,
+              style,
+            ]}
           />
           {secure && (
             <Pressable
@@ -168,6 +190,8 @@ export const OtpInput = ({
   error?: boolean;
 }) => {
   const refs = useRef<Array<any>>([]);
+  const containerRef = useRef<any>(null);
+  const kb = useKeyboardScroll();
   const [focus, setFocus] = useState<number | null>(null);
   const digits = Array.from({ length }, (_, i) => value[i] ?? '');
 
@@ -186,7 +210,11 @@ export const OtpInput = ({
   };
 
   return (
-    <View accessibilityLabel={`Código de seguridad de ${length} dígitos`} style={{ flexDirection: 'row', gap: 8 }}>
+    <View
+      ref={containerRef as any}
+      accessibilityLabel={`Código de seguridad de ${length} dígitos`}
+      style={{ flexDirection: 'row', gap: 8 }}
+    >
       {digits.map((d, i) => (
         <TextInput
           key={i}
@@ -198,7 +226,10 @@ export const OtpInput = ({
           onKeyPress={({ nativeEvent }) => {
             if (nativeEvent.key === 'Backspace' && !d && i > 0) refs.current[i - 1]?.focus();
           }}
-          onFocus={() => setFocus(i)}
+          onFocus={() => {
+            setFocus(i);
+            kb?.scrollToField(containerRef);
+          }}
           onBlur={() => setFocus(null)}
           keyboardType="number-pad"
           inputMode="numeric"
