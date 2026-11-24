@@ -39,12 +39,17 @@ import {
   UserIcon,
   MailIcon,
   LockIcon,
+  SoftBackground,
+  At,
+  useScreenTimeline,
+  T_FAST,
   colors,
   fonts,
 } from '@/components/ui';
 
 export default function RegisterScreen() {
   const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const t = useScreenTimeline();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -217,162 +222,179 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+    <View style={styles.root}>
+      <SoftBackground />
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={styles.topWrap}>
-            {/* ── Barra Superior con Botón Volver ── */}
-            <View style={styles.topBar}>
-              <BackButton onPress={() => router.back()} />
-              <View style={styles.topBarSpacer} />
-            </View>
-
-            {/* ── Tarjeta Neumórfica (D2) ── */}
-            <NeuCard style={styles.cardContainer}>
-              {/* Barra de acento */}
-              <AccentBar />
-
-              {/* Título: Crea tu cuenta */}
-              <Heading accent="cuenta">Crea tu </Heading>
-
-              <View style={styles.subtitleWrap}>
-                <Subtitle>
-                  Regístrate para acceder a las herramientas perinatales y a los módulos clínicos.
-                </Subtitle>
-              </View>
-
-              {/* Banner de error general si ocurre */}
-              {bannerError && (
-                <View style={styles.bannerWrap}>
-                  <ErrorBanner
-                    title={bannerError.title}
-                    text={bannerError.text}
-                  />
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.topWrap}>
+              {/* ── Barra Superior con Botón Volver ── */}
+              <At t={t} start={T_FAST.topBar} dy={8}>
+                <View style={styles.topBar}>
+                  <BackButton onPress={() => router.back()} />
+                  <View style={styles.topBarSpacer} />
                 </View>
-              )}
+              </At>
 
-              {/* Botón de Google */}
-              <View style={styles.googleWrap}>
-                <GoogleButton
-                  onPress={handleGoogleRegister}
-                  title="Continuar con Google"
-                />
-              </View>
+              {/* ── Tarjeta Neumórfica (D2) ── */}
+              <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
+                <NeuCard style={styles.cardContainer}>
+                  {/* Barra de acento y título */}
+                  <At t={t} start={T_FAST.header}>
+                    <AccentBar />
+                    <Heading accent="cuenta">Crea tu </Heading>
+                  </At>
 
-              {/* Separador */}
-              <View style={styles.dividerWrap}>
-                <OrDivider text="o con tu correo" />
-              </View>
+                  <At t={t} start={T_FAST.subtitle} style={styles.subtitleWrap}>
+                    <Subtitle>
+                      Regístrate para acceder a las herramientas perinatales y a los módulos clínicos.
+                    </Subtitle>
+                  </At>
 
-              {/* Formulario */}
-              <View style={styles.formWrap}>
-                {/* Nombre completo */}
-                <NeuInput
-                  label="Nombre completo"
-                  icon={<UserIcon />}
-                  placeholder="Nombre y apellido"
-                  value={fullName}
-                  onChangeText={(val) => {
-                    setFullName(val);
-                    if (nameError) setNameError(undefined);
-                  }}
-                  autoCapitalize="words"
-                  autoComplete="name"
-                  error={nameError}
-                />
+                  {/* Banner de error general si ocurre */}
+                  {bannerError && (
+                    <View style={styles.bannerWrap}>
+                      <ErrorBanner
+                        title={bannerError.title}
+                        text={bannerError.text}
+                      />
+                    </View>
+                  )}
 
-                {/* Correo institucional o personal */}
-                <NeuInput
-                  label="Correo institucional o personal"
-                  icon={<MailIcon />}
-                  placeholder="nombre@ulagos.cl"
-                  value={email}
-                  onChangeText={(val) => {
-                    setEmail(val);
-                    if (emailError) setEmailError(undefined);
-                  }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="email"
-                  error={emailError}
-                />
+                  {/* Botón de Google */}
+                  <At t={t} start={T_FAST.google} style={styles.googleWrap}>
+                    <GoogleButton
+                      onPress={handleGoogleRegister}
+                      title="Continuar con Google"
+                    />
+                  </At>
 
-                {/* Contraseña */}
-                <NeuInput
-                  label="Contraseña"
-                  icon={<LockIcon />}
-                  placeholder="Mínimo 8 caracteres"
-                  secure
-                  value={password}
-                  onChangeText={(val) => {
-                    setPassword(val);
-                    if (passwordError) setPasswordError(undefined);
-                  }}
-                  autoComplete="new-password"
-                  error={passwordError}
-                />
-              </View>
+                  {/* Separador */}
+                  <At t={t} start={T_FAST.divider} style={styles.dividerWrap}>
+                    <OrDivider text="o con tu correo" />
+                  </At>
 
-              {/* Checkbox de Términos y Condiciones */}
-              <View style={styles.checkboxWrap}>
-                <NeuCheckbox
-                  checked={acceptedTerms}
-                  onChange={(val) => {
-                    setAcceptedTerms(val);
-                    if (termsError) setTermsError(undefined);
-                  }}
-                >
-                  Acepto los{' '}
-                  <NeuLink onPress={showTerms}>términos de uso</NeuLink> y la{' '}
-                  <NeuLink onPress={showPrivacy}>política de privacidad</NeuLink>.
-                </NeuCheckbox>
+                  {/* Formulario */}
+                  <View style={styles.formWrap}>
+                    {/* Nombre completo */}
+                    <At t={t} start={T_FAST.field1}>
+                      <NeuInput
+                        label="Nombre completo"
+                        icon={<UserIcon />}
+                        placeholder="Nombre y apellido"
+                        value={fullName}
+                        onChangeText={(val) => {
+                          setFullName(val);
+                          if (nameError) setNameError(undefined);
+                        }}
+                        autoCapitalize="words"
+                        autoComplete="name"
+                        error={nameError}
+                      />
+                    </At>
 
-                {termsError && (
-                  <View style={styles.termsErrorWrap}>
-                    <InlineError>{termsError}</InlineError>
+                    {/* Correo institucional o personal */}
+                    <At t={t} start={T_FAST.field2}>
+                      <NeuInput
+                        label="Correo institucional o personal"
+                        icon={<MailIcon />}
+                        placeholder="nombre@ulagos.cl"
+                        value={email}
+                        onChangeText={(val) => {
+                          setEmail(val);
+                          if (emailError) setEmailError(undefined);
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="email"
+                        error={emailError}
+                      />
+                    </At>
+
+                    {/* Contraseña */}
+                    <At t={t} start={T_FAST.field3}>
+                      <NeuInput
+                        label="Contraseña"
+                        icon={<LockIcon />}
+                        placeholder="Mínimo 8 caracteres"
+                        secure
+                        value={password}
+                        onChangeText={(val) => {
+                          setPassword(val);
+                          if (passwordError) setPasswordError(undefined);
+                        }}
+                        autoComplete="new-password"
+                        error={passwordError}
+                      />
+                    </At>
                   </View>
-                )}
-              </View>
 
-              {/* Botón Crear Cuenta */}
-              <View style={styles.buttonWrap}>
-                <NeuButton
-                  title="Crear cuenta"
-                  onPress={handleRegister}
-                  loading={loading}
-                  disabled={loading}
-                />
-              </View>
+                  {/* Checkbox de Términos y Condiciones */}
+                  <At t={t} start={T_FAST.checkbox} style={styles.checkboxWrap}>
+                    <NeuCheckbox
+                      checked={acceptedTerms}
+                      onChange={(val) => {
+                        setAcceptedTerms(val);
+                        if (termsError) setTermsError(undefined);
+                      }}
+                    >
+                      Acepto los{' '}
+                      <NeuLink onPress={showTerms}>términos de uso</NeuLink> y la{' '}
+                      <NeuLink onPress={showPrivacy}>política de privacidad</NeuLink>.
+                    </NeuCheckbox>
 
-              {/* Enlace Iniciar Sesión (Flujo D1) */}
-              <View style={styles.footerLinkWrap}>
-                <Text style={styles.footerLinkText}>
-                  ¿Ya tienes una cuenta?{' '}
-                  <NeuLink onPress={() => router.push('/login')}>
-                    Inicia sesión
-                  </NeuLink>
-                </Text>
-              </View>
-            </NeuCard>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                    {termsError && (
+                      <View style={styles.termsErrorWrap}>
+                        <InlineError>{termsError}</InlineError>
+                      </View>
+                    )}
+                  </At>
+
+                  {/* Botón Crear Cuenta */}
+                  <At t={t} start={T_FAST.button} style={styles.buttonWrap}>
+                    <NeuButton
+                      title="Crear cuenta"
+                      onPress={handleRegister}
+                      loading={loading}
+                      disabled={loading}
+                    />
+                  </At>
+
+                  {/* Enlace Iniciar Sesión (Flujo D1) */}
+                  <At t={t} start={T_FAST.footer} dy={8} style={styles.footerLinkWrap}>
+                    <Text style={styles.footerLinkText}>
+                      ¿Ya tienes una cuenta?{' '}
+                      <NeuLink onPress={() => router.push('/login')}>
+                        Inicia sesión
+                      </NeuLink>
+                    </Text>
+                  </At>
+                </NeuCard>
+              </At>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardAvoid: {
     flex: 1,

@@ -18,7 +18,7 @@ import {
 } from '@expo-google-fonts/dm-sans';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { AppLoadingScreen, OfflineBanner } from '@/components/feedback';
+import { OfflineBanner } from '@/components/feedback';
 import { colors } from '@/components/ui';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -123,7 +123,7 @@ function RootNavigator() {
   }, []);
 
   if (loading || (!fontsLoaded && !fontError)) {
-    return <AppLoadingScreen message="Iniciando sesión segura..." />;
+    return null;
   }
 
   return (

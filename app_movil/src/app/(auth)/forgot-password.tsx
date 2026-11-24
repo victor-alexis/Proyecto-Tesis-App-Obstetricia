@@ -35,12 +35,17 @@ import {
   SecureFooter,
   KeyIcon,
   MailIcon,
+  SoftBackground,
+  At,
+  useScreenTimeline,
+  T_FAST,
   colors,
   fonts,
 } from '@/components/ui';
 
 export default function ForgotPasswordScreen() {
   const { sendPasswordResetOtp } = useAuth();
+  const t = useScreenTimeline();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -116,107 +121,122 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+    <View style={styles.root}>
+      <SoftBackground />
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {/* ── Barra Superior con Botón Volver ── */}
-          <View style={styles.topBar}>
-            <BackButton onPress={() => router.back()} />
-            <View style={styles.topBarSpacer} />
-          </View>
-
-          {/* ── Contenedor Central con Tarjeta Neumórfica (D3) ── */}
-          <View style={styles.cardWrapper}>
-            <NeuCard style={styles.card}>
-              {/* Placa circular con icono de Llave */}
-              <IconPlate badge="accent">
-                <KeyIcon size={30} color={colors.text} />
-              </IconPlate>
-
-              {/* Título centrado */}
-              <View style={styles.headerWrap}>
-                <AccentBar center />
-                <Heading accent="contraseña" center>Recupera tu </Heading>
-                <View style={styles.subtitleWrap}>
-                  <Subtitle center>
-                    Ingresa tu correo y te enviaremos un código de seguridad para restablecerla.
-                  </Subtitle>
-                </View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* ── Barra Superior con Botón Volver ── */}
+            <At t={t} start={T_FAST.topBar} dy={8}>
+              <View style={styles.topBar}>
+                <BackButton onPress={() => router.back()} />
+                <View style={styles.topBarSpacer} />
               </View>
+            </At>
 
-              {/* Banner de error general si ocurre */}
-              {bannerError && (
-                <View style={styles.bannerWrap}>
-                  <ErrorBanner
-                    title={bannerError.title}
-                    text={bannerError.text}
-                  />
-                </View>
-              )}
+            {/* ── Contenedor Central con Tarjeta Neumórfica (D3) ── */}
+            <View style={styles.cardWrapper}>
+              <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
+                <NeuCard style={styles.card}>
+                  {/* Placa circular con icono de Llave */}
+                  <At t={t} start={T_FAST.plate}>
+                    <IconPlate badge="accent">
+                      <KeyIcon size={30} color={colors.text} />
+                    </IconPlate>
+                  </At>
 
-              {/* Campo Correo */}
-              <View style={styles.inputWrap}>
-                <NeuInput
-                  label="Correo institucional o personal"
-                  icon={<MailIcon />}
-                  placeholder="nombre@ulagos.cl"
-                  value={email}
-                  onChangeText={(val) => {
-                    setEmail(val);
-                    if (emailError) setEmailError(undefined);
-                    if (bannerError) setBannerError(null);
-                  }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="email"
-                  error={emailError}
-                />
-              </View>
+                  {/* Título centrado */}
+                  <At t={t} start={T_FAST.header} style={styles.headerWrap}>
+                    <AccentBar center />
+                    <Heading accent="contraseña" center>
+                      Recupera tu{' '}
+                    </Heading>
+                    <View style={styles.subtitleWrap}>
+                      <Subtitle center>
+                        Ingresa tu correo y te enviaremos un código de seguridad para restablecerla.
+                      </Subtitle>
+                    </View>
+                  </At>
 
-              {/* Botón Enviar Código */}
-              <View style={styles.buttonWrap}>
-                <NeuButton
-                  title="Enviar código"
-                  onPress={handleSendCode}
-                  loading={loading}
-                  disabled={loading}
-                />
-              </View>
+                  {/* Banner de error general si ocurre */}
+                  {bannerError && (
+                    <View style={styles.bannerWrap}>
+                      <ErrorBanner
+                        title={bannerError.title}
+                        text={bannerError.text}
+                      />
+                    </View>
+                  )}
 
-              {/* Enlace Volver a Iniciar Sesión (D1) */}
-              <View style={styles.footerLinkWrap}>
-                <Text style={styles.footerLinkText}>
-                  ¿La recordaste?{' '}
-                  <NeuLink onPress={() => router.replace('/login')}>
-                    Volver a iniciar sesión
-                  </NeuLink>
-                </Text>
-              </View>
-            </NeuCard>
-          </View>
+                  {/* Campo Correo */}
+                  <At t={t} start={T_FAST.field1} style={styles.inputWrap}>
+                    <NeuInput
+                      label="Correo institucional o personal"
+                      icon={<MailIcon />}
+                      placeholder="nombre@ulagos.cl"
+                      value={email}
+                      onChangeText={(val) => {
+                        setEmail(val);
+                        if (emailError) setEmailError(undefined);
+                        if (bannerError) setBannerError(null);
+                      }}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="email"
+                      error={emailError}
+                    />
+                  </At>
 
-          {/* ── Pie de Página Cifrado y Seguro ── */}
-          <View style={styles.footerWrap}>
-            <SecureFooter />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                  {/* Botón Enviar Código */}
+                  <At t={t} start={T_FAST.button} style={styles.buttonWrap}>
+                    <NeuButton
+                      title="Enviar código"
+                      onPress={handleSendCode}
+                      loading={loading}
+                      disabled={loading}
+                    />
+                  </At>
+
+                  {/* Enlace Volver a Iniciar Sesión (D1) */}
+                  <At t={t} start={T_FAST.footer} dy={8} style={styles.footerLinkWrap}>
+                    <Text style={styles.footerLinkText}>
+                      ¿La recordaste?{' '}
+                      <NeuLink onPress={() => router.replace('/login')}>
+                        Volver a iniciar sesión
+                      </NeuLink>
+                    </Text>
+                  </At>
+                </NeuCard>
+              </At>
+            </View>
+
+            {/* ── Pie de Página Cifrado y Seguro ── */}
+            <At t={t} start={T_FAST.footer + 0.04} dy={8} style={styles.footerWrap}>
+              <SecureFooter />
+            </At>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardAvoid: {
     flex: 1,

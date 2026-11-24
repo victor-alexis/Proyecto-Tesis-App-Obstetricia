@@ -41,12 +41,17 @@ import {
   CheckCircleIcon,
   ShieldIcon,
   DeviceIcon,
+  SoftBackground,
+  At,
+  useScreenTimeline,
+  T_FAST,
   colors,
   fonts,
 } from '@/components/ui';
 
 export default function ResetPasswordScreen() {
   const { updatePassword, signOut } = useAuth();
+  const t = useScreenTimeline();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -165,63 +170,75 @@ export default function ResetPasswordScreen() {
   // ──────────────────────────────────────────────
   if (isSuccess) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.mainContainer}>
-          {/* Barra Superior */}
-          <View style={styles.topBar}>
-            <BackButton onPress={handleReturnToLogin} />
-            <View style={styles.topBarSpacer} />
-          </View>
+      <View style={styles.root}>
+        <SoftBackground />
 
-          {/* Tarjeta de Éxito (D3.3) */}
-          <View style={styles.cardWrapper}>
-            <NeuCard style={styles.cardSuccess}>
-              {/* Placa con Check Verde/Texto */}
-              <IconPlate badge="accent">
-                <CheckCircleIcon size={30} color={colors.text} />
-              </IconPlate>
-
-              {/* Encabezado */}
-              <View style={styles.headerWrap}>
-                <AccentBar center />
-                <Heading accent="listo!" center>¡Todo </Heading>
-                <View style={styles.subtitleWrap}>
-                  <Subtitle center>
-                    Tu contraseña se actualizó correctamente. Ya puedes ingresar con ella.
-                  </Subtitle>
-                </View>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.mainContainer}>
+            {/* Barra Superior */}
+            <At t={t} start={T_FAST.topBar} dy={8}>
+              <View style={styles.topBar}>
+                <BackButton onPress={handleReturnToLogin} />
+                <View style={styles.topBarSpacer} />
               </View>
+            </At>
 
-              {/* Filas informativas de seguridad */}
-              <View style={styles.listRowsWrap}>
-                <ListRow
-                  icon={<ShieldIcon size={18} color={colors.text} />}
-                  title="Cuenta protegida"
-                  text="La contraseña anterior ya no es válida."
-                />
-                <ListRow
-                  icon={<DeviceIcon size={18} color={colors.text} />}
-                  title="Sesiones cerradas"
-                  text="Cerramos los otros dispositivos con tu cuenta."
-                />
-              </View>
+            {/* Tarjeta de Éxito (D3.3) */}
+            <View style={styles.cardWrapper}>
+              <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
+                <NeuCard style={styles.cardSuccess}>
+                  {/* Placa con Check Verde/Texto */}
+                  <At t={t} start={T_FAST.plate}>
+                    <IconPlate badge="accent">
+                      <CheckCircleIcon size={30} color={colors.text} />
+                    </IconPlate>
+                  </At>
 
-              {/* Botón de Retorno al Login */}
-              <View style={styles.buttonWrapSuccess}>
-                <NeuButton
-                  title="Volver a iniciar sesión"
-                  onPress={handleReturnToLogin}
-                />
-              </View>
-            </NeuCard>
+                  {/* Encabezado */}
+                  <At t={t} start={T_FAST.header} style={styles.headerWrap}>
+                    <AccentBar center />
+                    <Heading accent="listo!" center>
+                      ¡Todo{' '}
+                    </Heading>
+                    <View style={styles.subtitleWrap}>
+                      <Subtitle center>
+                        Tu contraseña se actualizó correctamente. Ya puedes ingresar con ella.
+                      </Subtitle>
+                    </View>
+                  </At>
+
+                  {/* Filas informativas de seguridad */}
+                  <At t={t} start={T_FAST.field1} style={styles.listRowsWrap}>
+                    <ListRow
+                      icon={<ShieldIcon size={18} color={colors.text} />}
+                      title="Cuenta protegida"
+                      text="La contraseña anterior ya no es válida."
+                    />
+                    <ListRow
+                      icon={<DeviceIcon size={18} color={colors.text} />}
+                      title="Sesiones cerradas"
+                      text="Cerramos los otros dispositivos con tu cuenta."
+                    />
+                  </At>
+
+                  {/* Botón de Retorno al Login */}
+                  <At t={t} start={T_FAST.button} style={styles.buttonWrapSuccess}>
+                    <NeuButton
+                      title="Volver a iniciar sesión"
+                      onPress={handleReturnToLogin}
+                    />
+                  </At>
+                </NeuCard>
+              </At>
+            </View>
+
+            {/* Pie de página seguro */}
+            <At t={t} start={T_FAST.footer} dy={8} style={styles.footerWrap}>
+              <SecureFooter />
+            </At>
           </View>
-
-          {/* Pie de página seguro */}
-          <View style={styles.footerWrap}>
-            <SecureFooter />
-          </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -229,114 +246,130 @@ export default function ResetPasswordScreen() {
   // PANTALLA D3.2: Formulario Nueva Contraseña
   // ──────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+    <View style={styles.root}>
+      <SoftBackground />
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {/* Barra Superior */}
-          <View style={styles.topBar}>
-            <BackButton onPress={() => router.back()} />
-            <View style={styles.topBarSpacer} />
-          </View>
-
-          {/* Tarjeta Neumórfica (D3.2) */}
-          <View style={styles.cardWrapper}>
-            <NeuCard style={styles.cardForm}>
-              <AccentBar />
-
-              <Heading accent="contraseña">Nueva </Heading>
-
-              <View style={styles.subtitleWrapLeft}>
-                <Subtitle>
-                  Elige una contraseña segura que no uses en otros sitios.
-                </Subtitle>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Barra Superior */}
+            <At t={t} start={T_FAST.topBar} dy={8}>
+              <View style={styles.topBar}>
+                <BackButton onPress={() => router.back()} />
+                <View style={styles.topBarSpacer} />
               </View>
+            </At>
 
-              {/* Banner de error si ocurre */}
-              {bannerError && (
-                <View style={styles.bannerWrap}>
-                  <ErrorBanner
-                    title={bannerError.title}
-                    text={bannerError.text}
-                  />
-                </View>
-              )}
+            {/* Tarjeta Neumórfica (D3.2) */}
+            <View style={styles.cardWrapper}>
+              <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
+                <NeuCard style={styles.cardForm}>
+                  <At t={t} start={T_FAST.header}>
+                    <AccentBar />
+                    <Heading accent="contraseña">Nueva </Heading>
+                  </At>
 
-              {/* Campos de Contraseña */}
-              <View style={styles.inputsWrap}>
-                <NeuInput
-                  label="Nueva contraseña"
-                  icon={<LockIcon />}
-                  placeholder="Mínimo 8 caracteres"
-                  secure
-                  value={password}
-                  onChangeText={(val) => {
-                    setPassword(val);
-                    if (passwordError) setPasswordError(undefined);
-                  }}
-                  autoComplete="new-password"
-                  error={passwordError}
-                />
+                  <At t={t} start={T_FAST.subtitle} style={styles.subtitleWrapLeft}>
+                    <Subtitle>
+                      Elige una contraseña segura que no uses en otros sitios.
+                    </Subtitle>
+                  </At>
 
-                <NeuInput
-                  label="Confirmar contraseña"
-                  icon={<LockIcon />}
-                  placeholder="Repite tu contraseña"
-                  secure
-                  value={confirmPassword}
-                  onChangeText={(val) => {
-                    setConfirmPassword(val);
-                    if (confirmError) setConfirmError(undefined);
-                  }}
-                  autoComplete="new-password"
-                  error={confirmError}
-                />
-              </View>
+                  {/* Banner de error si ocurre */}
+                  {bannerError && (
+                    <View style={styles.bannerWrap}>
+                      <ErrorBanner
+                        title={bannerError.title}
+                        text={bannerError.text}
+                      />
+                    </View>
+                  )}
 
-              {/* Medidor de Seguridad */}
-              <View style={styles.strengthWrap}>
-                <StrengthMeter level={strengthLevel} label={strengthLabel} />
-              </View>
+                  {/* Campos de Contraseña */}
+                  <View style={styles.inputsWrap}>
+                    <At t={t} start={T_FAST.field1}>
+                      <NeuInput
+                        label="Nueva contraseña"
+                        icon={<LockIcon />}
+                        placeholder="Mínimo 8 caracteres"
+                        secure
+                        value={password}
+                        onChangeText={(val) => {
+                          setPassword(val);
+                          if (passwordError) setPasswordError(undefined);
+                        }}
+                        autoComplete="new-password"
+                        error={passwordError}
+                      />
+                    </At>
 
-              {/* Lista de Requisitos de Contraseña */}
-              <View style={styles.requirementsWrap}>
-                <Requirement ok={hasMinLength}>Mínimo 8 caracteres</Requirement>
-                <Requirement ok={hasUppercase}>Una letra mayúscula</Requirement>
-                <Requirement ok={hasNumber}>Un número</Requirement>
-              </View>
+                    <At t={t} start={T_FAST.field2}>
+                      <NeuInput
+                        label="Confirmar contraseña"
+                        icon={<LockIcon />}
+                        placeholder="Repite tu contraseña"
+                        secure
+                        value={confirmPassword}
+                        onChangeText={(val) => {
+                          setConfirmPassword(val);
+                          if (confirmError) setConfirmError(undefined);
+                        }}
+                        autoComplete="new-password"
+                        error={confirmError}
+                      />
+                    </At>
+                  </View>
 
-              {/* Botón Guardar Contraseña */}
-              <View style={styles.buttonWrapForm}>
-                <NeuButton
-                  title="Guardar contraseña"
-                  onPress={handleSavePassword}
-                  loading={loading}
-                  disabled={loading}
-                />
-              </View>
-            </NeuCard>
-          </View>
+                  {/* Medidor de Seguridad */}
+                  <At t={t} start={T_FAST.meter} style={styles.strengthWrap}>
+                    <StrengthMeter level={strengthLevel} label={strengthLabel} />
+                  </At>
 
-          {/* Pie de página seguro */}
-          <View style={styles.footerWrap}>
-            <SecureFooter />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                  {/* Lista de Requisitos de Contraseña */}
+                  <At t={t} start={T_FAST.checkbox} style={styles.requirementsWrap}>
+                    <Requirement ok={hasMinLength}>Mínimo 8 caracteres</Requirement>
+                    <Requirement ok={hasUppercase}>Una letra mayúscula</Requirement>
+                    <Requirement ok={hasNumber}>Un número</Requirement>
+                  </At>
+
+                  {/* Botón Guardar Contraseña */}
+                  <At t={t} start={T_FAST.button} style={styles.buttonWrapForm}>
+                    <NeuButton
+                      title="Guardar contraseña"
+                      onPress={handleSavePassword}
+                      loading={loading}
+                      disabled={loading}
+                    />
+                  </At>
+                </NeuCard>
+              </At>
+            </View>
+
+            {/* Pie de página seguro */}
+            <At t={t} start={T_FAST.footer} dy={8} style={styles.footerWrap}>
+              <SecureFooter />
+            </At>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardAvoid: {
     flex: 1,

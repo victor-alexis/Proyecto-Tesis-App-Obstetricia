@@ -23,7 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { colors, fonts, accentA } from './tokens';
 
-/** Tiempos (s). Cambia aquí para acelerar/retrasar cualquier elemento. */
+/** Tiempos (s) del Splash Login inicial. */
 export const T = {
   wordStart: 0.35,
   wordStep: 0.075, // letras del nombre
@@ -43,6 +43,25 @@ export const T = {
   signup: 6.3,
   footer: 6.55,
   end: 7.4,
+};
+
+/** Tiempos rápidos (s) para pantallas de navegación individual (register, otp, forgot, reset). */
+export const T_FAST = {
+  topBar: 0.04,
+  card: 0.1,
+  plate: 0.14,
+  header: 0.18,
+  subtitle: 0.22,
+  google: 0.26,
+  divider: 0.3,
+  field1: 0.34,
+  field2: 0.4,
+  field3: 0.46,
+  meter: 0.5,
+  checkbox: 0.52,
+  button: 0.56,
+  footer: 0.62,
+  end: 0.75,
 };
 
 // ── funciones de tiempo (worklets: corren en el hilo de UI) ──
@@ -84,6 +103,22 @@ export function useTimeline(opts: { once?: boolean } = {}) {
     t.value = withTiming(T.end, { duration: T.end * 1000, easing: Easing.linear });
     alreadyPlayed = true;
   }, [skip, t]);
+
+  return t;
+}
+
+/** Línea de tiempo rápida para pantallas individuales y navegación fluida. */
+export function useScreenTimeline(duration: number = T_FAST.end) {
+  const reduce = useReducedMotion();
+  const t = useSharedValue(reduce ? duration : 0);
+
+  useEffect(() => {
+    if (reduce) return;
+    t.value = withTiming(duration, {
+      duration: duration * 1000,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [reduce, t, duration]);
 
   return t;
 }

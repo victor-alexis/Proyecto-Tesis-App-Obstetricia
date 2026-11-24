@@ -36,6 +36,10 @@ import {
   SecureFooter,
   ShieldIcon,
   InfoIcon,
+  SoftBackground,
+  At,
+  useScreenTimeline,
+  T_FAST,
   colors,
   fonts,
 } from '@/components/ui';
@@ -48,6 +52,7 @@ export default function VerifyOtpScreen() {
   const email = params.email || '';
   const type = params.type === 'recovery' ? 'recovery' : 'signup';
   const isRecovery = type === 'recovery';
+  const t = useScreenTimeline();
 
   const {
     verifySignupOtp,
@@ -203,125 +208,138 @@ export default function VerifyOtpScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+    <View style={styles.root}>
+      <SoftBackground />
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {/* ── Barra Superior con Botón Volver ── */}
-          <View style={styles.topBar}>
-            <BackButton onPress={() => router.back()} />
-            <View style={styles.topBarSpacer} />
-          </View>
-
-          {/* ── Tarjeta Neumórfica Central (D4 / D4.2) ── */}
-          <View style={styles.cardWrapper}>
-            <NeuCard style={styles.card}>
-              {/* Placa con escudo: insignia accent en estado normal, error en D4.2 */}
-              <IconPlate badge={isOtpError ? 'error' : 'accent'}>
-                <ShieldIcon size={30} color={colors.text} />
-              </IconPlate>
-
-              {/* Título y subtítulo */}
-              <View style={styles.headerWrap}>
-                <AccentBar center />
-                <Heading accent="identidad" center>
-                  Verifica tu{' '}
-                </Heading>
-                <View style={styles.subtitleWrap}>
-                  <Subtitle center>
-                    Ingresa el código de 6 dígitos que enviamos a{' '}
-                    <Text style={styles.emailHighlight}>
-                      {obfuscateEmail(email)}
-                    </Text>
-                    .
-                  </Subtitle>
-                </View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* ── Barra Superior con Botón Volver ── */}
+            <At t={t} start={T_FAST.topBar} dy={8}>
+              <View style={styles.topBar}>
+                <BackButton onPress={() => router.back()} />
+                <View style={styles.topBarSpacer} />
               </View>
+            </At>
 
-              {/* Entrada OTP de 6 dígitos */}
-              <View style={styles.otpWrap}>
-                <OtpInput
-                  value={code}
-                  onChange={(val) => {
-                    setCode(val);
-                    if (isOtpError) {
-                      setIsOtpError(false);
-                      setErrorMessage(null);
-                    }
-                  }}
-                  length={6}
-                  error={isOtpError}
-                />
-              </View>
+            {/* ── Tarjeta Neumórfica Central (D4 / D4.2) ── */}
+            <View style={styles.cardWrapper}>
+              <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
+                <NeuCard style={styles.card}>
+                  {/* Placa con escudo: insignia accent en estado normal, error en D4.2 */}
+                  <At t={t} start={T_FAST.plate}>
+                    <IconPlate badge={isOtpError ? 'error' : 'accent'}>
+                      <ShieldIcon size={30} color={colors.text} />
+                    </IconPlate>
+                  </At>
 
-              {/* Mensaje de estado: expiración o error (D4.2) */}
-              <View style={styles.statusWrap}>
-                {errorMessage ? (
-                  <View style={styles.errorInline}>
-                    <InfoIcon size={15} color={colors.errorDark} />
-                    <Text style={styles.errorInlineText}>{errorMessage}</Text>
-                  </View>
-                ) : successNotice ? (
-                  <Text style={styles.successNoticeText}>{successNotice}</Text>
-                ) : (
-                  <Text style={styles.expireText}>
-                    El código vence en 10 minutos.
-                  </Text>
-                )}
-              </View>
+                  {/* Título y subtítulo */}
+                  <At t={t} start={T_FAST.header} style={styles.headerWrap}>
+                    <AccentBar center />
+                    <Heading accent="identidad" center>
+                      Verifica tu{' '}
+                    </Heading>
+                    <View style={styles.subtitleWrap}>
+                      <Subtitle center>
+                        Ingresa el código de 6 dígitos que enviamos a{' '}
+                        <Text style={styles.emailHighlight}>
+                          {obfuscateEmail(email)}
+                        </Text>
+                        .
+                      </Subtitle>
+                    </View>
+                  </At>
 
-              {/* Botón Verificar Código */}
-              <View style={styles.buttonWrap}>
-                <NeuButton
-                  title="Verificar código"
-                  onPress={handleVerify}
-                  loading={loading}
-                  disabled={code.length !== 6 || loading}
-                />
-              </View>
+                  {/* Entrada OTP de 6 dígitos */}
+                  <At t={t} start={T_FAST.field1} style={styles.otpWrap}>
+                    <OtpInput
+                      value={code}
+                      onChange={(val) => {
+                        setCode(val);
+                        if (isOtpError) {
+                          setIsOtpError(false);
+                          setErrorMessage(null);
+                        }
+                      }}
+                      length={6}
+                      error={isOtpError}
+                    />
+                  </At>
 
-              {/* Bloque Reenviar código y Cambiar correo */}
-              <View style={styles.resendBlock}>
-                <View style={styles.resendRow}>
-                  <Text style={styles.resendPrompt}>
-                    ¿No recibiste el código?{' '}
-                  </Text>
-                  <NeuLink onPress={handleResend}>Reenviar</NeuLink>
-                </View>
+                  {/* Mensaje de estado: expiración o error (D4.2) */}
+                  <At t={t} start={T_FAST.field2} style={styles.statusWrap}>
+                    {errorMessage ? (
+                      <View style={styles.errorInline}>
+                        <InfoIcon size={15} color={colors.errorDark} />
+                        <Text style={styles.errorInlineText}>{errorMessage}</Text>
+                      </View>
+                    ) : successNotice ? (
+                      <Text style={styles.successNoticeText}>{successNotice}</Text>
+                    ) : (
+                      <Text style={styles.expireText}>
+                        El código vence en 10 minutos.
+                      </Text>
+                    )}
+                  </At>
 
-                {cooldown > 0 && (
-                  <Text style={styles.cooldownText}>
-                    Podrás reenviarlo en {formatCountdown(cooldown)}
-                  </Text>
-                )}
+                  {/* Botón Verificar Código */}
+                  <At t={t} start={T_FAST.button} style={styles.buttonWrap}>
+                    <NeuButton
+                      title="Verificar código"
+                      onPress={handleVerify}
+                      loading={loading}
+                      disabled={code.length !== 6 || loading}
+                    />
+                  </At>
 
-                <View style={styles.changeEmailWrap}>
-                  <NeuLink onPress={() => router.back()}>Cambiar correo</NeuLink>
-                </View>
-              </View>
-            </NeuCard>
-          </View>
+                  {/* Bloque Reenviar código y Cambiar correo */}
+                  <At t={t} start={T_FAST.footer} dy={8} style={styles.resendBlock}>
+                    <View style={styles.resendRow}>
+                      <Text style={styles.resendPrompt}>
+                        ¿No recibiste el código?{' '}
+                      </Text>
+                      <NeuLink onPress={handleResend}>Reenviar</NeuLink>
+                    </View>
 
-          {/* ── Pie de Página Cifrado y Seguro ── */}
-          <View style={styles.footerWrap}>
-            <SecureFooter />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                    {cooldown > 0 && (
+                      <Text style={styles.cooldownText}>
+                        Podrás reenviarlo en {formatCountdown(cooldown)}
+                      </Text>
+                    )}
+
+                    <View style={styles.changeEmailWrap}>
+                      <NeuLink onPress={() => router.back()}>Cambiar correo</NeuLink>
+                    </View>
+                  </At>
+                </NeuCard>
+              </At>
+            </View>
+
+            {/* ── Pie de Página Cifrado y Seguro ── */}
+            <At t={t} start={T_FAST.footer + 0.04} dy={8} style={styles.footerWrap}>
+              <SecureFooter />
+            </At>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardAvoid: {
     flex: 1,
