@@ -363,7 +363,8 @@ export default function LoginScreen() {
                           setPassword(val);
                           clearCredentialError();
                         }}
-                        autoComplete="current-password"
+                        autoComplete="off"
+                        textContentType="oneTimeCode"
                         returnKeyType="go"
                         onSubmitEditing={handleEmailLogin}
                         rightLabel={

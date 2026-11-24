@@ -65,7 +65,12 @@
   - Servicio de biometría nativa `BiometricsService` (`expo-local-authentication`) con soporte para Face ID / Huella dactilar.
   - Detección de conectividad con `OfflineBanner` flotante animado para centros de salud con baja recepción.
 - [ ] **[PENDIENTE] Paso 2.5.3: Splash Screen Animado:**
-  - Componente `AnimatedSplashScreen.tsx` con escala, fade y resplandor bioluminiscente antes de mostrar la pantalla de Login.
+  - Componente `AnimatedSplashScreen.tsx` con escala, fade y resplandor bioluminiscente antes de mostrar la pantalla de Login (Actualmente cubierto con `neu-motion` en Login).
+- [ ] **[PENDIENTE] Paso 2.5.4: Acceso Rápido Biométrico Face ID / Touch ID (Estilo Mercado Pago):**
+  - Botón neumórfico con isotipo de Face ID en pantalla de Login (`login.tsx`).
+  - Activación directa del sensor biométrico (`LocalAuthentication.authenticateAsync()`) al iniciar la app o pulsar el botón, sin abrir el teclado.
+  - Almacenamiento y recuperación segura del refresh token / credenciales en `expo-secure-store`.
+  - Despliegue del formulario convencional solo como método de contingencia.
 - [x] **Paso 2.6: SMTP Gmail para OTP en desarrollo (2026-11-19):**
   - Configurado Gmail SMTP en Supabase con `victoralexis.chile@gmail.com` + App Password.
   - Permite enviar OTPs a **cualquier correo** sin restricciones de dominio.

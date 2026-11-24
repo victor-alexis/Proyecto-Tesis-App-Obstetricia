@@ -24,7 +24,11 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
    - Creado `KeyboardScrollContext` y `useKeyboardAwareScroll` en `motion.tsx`.
    - Modificado `NeuInput` en `forms.tsx` con `React.forwardRef` y auto-scroll inteligente mediante `measureLayout` relativo al `ScrollView` padre.
    - Eliminado el conflicto de doble padding de `automaticallyAdjustKeyboardInsets` y ajustado el alineamiento (`justifyContent: 'flex-start'`) ante teclado activo, garantizando que el campo enfocado y las herramientas/sugerencias de iOS se posicionen limpiamente en el tercio superior de la pantalla.
-5. **Verificación:**
+5. **Eliminación de Franja Blanca de Accesorios de iOS y Desactivación de Sugerencias:**
+   - Supresión definitiva de la barra superior blanca de iOS (`< > (✓)`) asociando un `<InputAccessoryView nativeID="CC_EmptyAccessoryBar" />` de altura 0 a todos los `NeuInput`.
+   - Desactivación total de los diálogos emergentes de iOS (*"¿Usar contraseña segura?"*) aplicando `autoComplete="off"`, `textContentType="oneTimeCode"`, `spellCheck={false}` y `autoCorrect={false}`.
+   - Registrada tarea pendiente en roadmap para el flujo de Face ID con acceso directo biométrico sin teclado (estilo Mercado Pago).
+6. **Verificación:**
    - 0 errores de tipado con `npx tsc --noEmit`.
    - 20/20 comprobaciones superadas en `npx expo-doctor`.
 

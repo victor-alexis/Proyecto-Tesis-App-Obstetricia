@@ -382,7 +382,8 @@ export default function RegisterScreen() {
                           setPassword(val);
                           if (passwordError) setPasswordError(undefined);
                         }}
-                        autoComplete="new-password"
+                        autoComplete="off"
+                        textContentType="oneTimeCode"
                         returnKeyType="done"
                         onSubmitEditing={handleRegister}
                         error={passwordError}

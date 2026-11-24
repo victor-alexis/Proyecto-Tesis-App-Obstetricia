@@ -325,7 +325,8 @@ export default function ResetPasswordScreen() {
                           setPassword(val);
                           if (passwordError) setPasswordError(undefined);
                         }}
-                        autoComplete="new-password"
+                        autoComplete="off"
+                        textContentType="oneTimeCode"
                         returnKeyType="next"
                         onSubmitEditing={() => confirmInputRef.current?.focus()}
                         error={passwordError}
@@ -344,7 +345,8 @@ export default function ResetPasswordScreen() {
                           setConfirmPassword(val);
                           if (confirmError) setConfirmError(undefined);
                         }}
-                        autoComplete="new-password"
+                        autoComplete="off"
+                        textContentType="oneTimeCode"
                         returnKeyType="done"
                         onSubmitEditing={handleSavePassword}
                         error={confirmError}

@@ -1,5 +1,7 @@
 import React, { ReactNode, useRef, useState } from 'react';
 import {
+  InputAccessoryView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -11,6 +13,8 @@ import { colors, fonts, radius, shadows } from './tokens';
 import { EyeIcon, EyeOffIcon, InfoIcon } from './icons';
 import { useKeyboardScroll } from './motion';
 
+const EMPTY_ACCESSORY_ID = 'CC_EmptyAccessoryBar';
+
 export interface NeuInputProps extends TextInputProps {
   label: string;
   icon: ReactNode;
@@ -19,7 +23,7 @@ export interface NeuInputProps extends TextInputProps {
   rightLabel?: ReactNode;
 }
 
-/** Campo hundido. `error` muestra aro y mensaje de error accesible. Soporta ref para navegación por teclado. */
+/** Campo hundido. `error` muestra aro y mensaje de error accesible. Soporta ref para navegación por teclado y suprime barras de accesorios de iOS. */
 export const NeuInput = React.forwardRef<any, NeuInputProps>(
   (
     {
@@ -55,6 +59,11 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
             secureTextEntry={hidden}
             autoCapitalize="none"
             selectionColor={colors.accent}
+            inputAccessoryViewID={Platform.OS === 'ios' ? EMPTY_ACCESSORY_ID : undefined}
+            autoComplete={props.autoComplete ?? (secure ? 'off' : undefined)}
+            textContentType={props.textContentType ?? (secure ? 'oneTimeCode' : 'none')}
+            spellCheck={false}
+            autoCorrect={false}
             onFocus={(e) => {
               setFocused(true);
               kb?.scrollToField(containerRef);
@@ -78,6 +87,11 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
             </Pressable>
           )}
         </View>
+        {Platform.OS === 'ios' && (
+          <InputAccessoryView nativeID={EMPTY_ACCESSORY_ID}>
+            <View style={{ height: 0 }} />
+          </InputAccessoryView>
+        )}
         {!!error && <InlineError>{error}</InlineError>}
       </View>
     );
