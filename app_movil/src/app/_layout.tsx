@@ -62,7 +62,7 @@ function RootNavigator() {
         document.head.appendChild(meta);
       }
       meta.content =
-        'width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover';
+        'width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content';
 
       const preventZoom = (e: TouchEvent) => {
         if (e.touches && e.touches.length > 1) {
@@ -83,6 +83,7 @@ function RootNavigator() {
           html, body, #root {
             overflow: hidden !important;
             height: 100% !important;
+            height: 100dvh !important;
             width: 100% !important;
             position: fixed !important;
             top: 0 !important;
@@ -100,6 +101,31 @@ function RootNavigator() {
           }
           input, textarea, select {
             font-size: 16px !important;
+            -webkit-appearance: none !important;
+          }
+          /* Suprimir botones de AutoFill de Safari WebKit */
+          input::-webkit-contacts-auto-fill-button,
+          input::-webkit-credentials-auto-fill-button {
+            visibility: hidden !important;
+            display: none !important;
+            pointer-events: none !important;
+            position: absolute !important;
+            right: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+          }
+          input:-webkit-autofill,
+          input:-webkit-autofill:hover,
+          input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 60px ${colors.bg} inset !important;
+            -webkit-text-fill-color: #2D3748 !important;
+            transition: background-color 5000s ease-in-out 0s !important;
+          }
+          input[data-secure="true"] {
+            -webkit-text-security: disc;
+          }
+          input[data-secure="false"] {
+            -webkit-text-security: none;
           }
         `;
         document.head.appendChild(style);

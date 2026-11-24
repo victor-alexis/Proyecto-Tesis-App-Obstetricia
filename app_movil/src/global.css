@@ -24,3 +24,45 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Safari iOS PWA — Supresión de AutoFill y decoraciones
+   ═══════════════════════════════════════════════════════════ */
+
+/* Ocultar el botón de Contactos / AutoFill de Safari */
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  right: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Evitar que Safari pinte fondo amarillo en campos autocompletados */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 60px #EEF2F6 inset !important;
+  -webkit-text-fill-color: #2D3748 !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Campos de contraseña simulados: respetar el toggle de visibilidad (data-secure) */
+input[data-secure="true"] {
+  -webkit-text-security: disc;
+}
+input[data-secure="false"] {
+  -webkit-text-security: none;
+}
+
+/* Forzar font-size 16px para evitar zoom automático en iOS Safari */
+input, textarea, select {
+  font-size: 16px !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}

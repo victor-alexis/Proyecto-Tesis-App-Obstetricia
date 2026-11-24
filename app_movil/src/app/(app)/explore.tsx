@@ -1,6 +1,6 @@
 // Pantalla de Exploración (RAG - Retrieval-Augmented Generation) para consultas clínicas
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,11 +9,13 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IOS_EMPTY_ACCESSORY_ID } from '@/components/ui';
 
 export default function ClinicalQueryScreen() {
+  const searchUid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,21 @@ export default function ClinicalQueryScreen() {
 
         <View style={styles.searchBox}>
           <TextInput
+            ref={(r: any) => {
+              if (Platform.OS === 'web' && r) {
+                const el =
+                  typeof HTMLInputElement !== 'undefined' && r instanceof HTMLInputElement
+                    ? r
+                    : r?.querySelector?.('input') ?? r;
+                if (typeof HTMLInputElement !== 'undefined' && el instanceof HTMLInputElement && !el.dataset.ccSearchBound) {
+                  el.dataset.ccSearchBound = '1';
+                  el.setAttribute('autocomplete', 'cc-nope');
+                  el.setAttribute('name', `cc_search_${searchUid}`);
+                  el.setAttribute('data-cc-field', 'true');
+                  el.setAttribute('enterkeyhint', 'search');
+                }
+              }
+            }}
             style={styles.input}
             placeholder="Ej: Criterios de hospitalización en preeclampsia..."
             placeholderTextColor="#A0AEC0"

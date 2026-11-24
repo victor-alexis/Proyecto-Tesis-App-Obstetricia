@@ -229,10 +229,11 @@ export function useKeyboardAwareScroll(): KeyboardScrollContextType {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const scrollEl = scrollNode.getScrollableNode?.() ?? scrollNode;
         const targetEl = target as HTMLElement;
-        if (
-          typeof scrollEl?.scrollTo === 'function' &&
-          typeof targetEl?.getBoundingClientRect === 'function'
-        ) {
+        if (typeof targetEl?.getBoundingClientRect === 'function') {
+          if (window.scrollX !== 0 || window.scrollY !== 0) {
+            window.scrollTo(0, 0);
+          }
+
           const vv = window.visualViewport;
           const visibleTop = (vv ? vv.offsetTop : 0) + 16;
           const visibleH = vv ? vv.height : window.innerHeight;
@@ -244,15 +245,18 @@ export function useKeyboardAwareScroll(): KeyboardScrollContextType {
             const desiredTop =
               visibleTop + Math.max(16, (visibleBottom - visibleTop - rect.height) * 0.35);
             const delta = rect.top - desiredTop;
-            scrollEl.scrollTo({
-              top: Math.max(0, (scrollEl.scrollTop || 0) + delta),
-              behavior: 'smooth',
-            });
+            const currentScrollTop =
+              typeof scrollEl?.scrollTop === 'number' ? scrollEl.scrollTop : scrollYRef.current;
+            const nextY = Math.max(0, currentScrollTop + delta);
+
+            // En react-native-web, ScrollView sobrescribe .scrollTo() con { y, animated }
+            if (typeof scrollNode.scrollTo === 'function') {
+              scrollNode.scrollTo({ y: nextY, animated: true });
+            } else if (typeof scrollEl?.scroll === 'function') {
+              scrollEl.scroll({ top: nextY, behavior: 'smooth' });
+            }
           }
           return;
-        }
-        if (typeof targetEl?.scrollIntoView === 'function') {
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         return;
       }

@@ -35,6 +35,22 @@
       "dest": "app_movil/login.html"
     },
     {
+      "src": "/register",
+      "dest": "app_movil/register.html"
+    },
+    {
+      "src": "/forgot-password",
+      "dest": "app_movil/forgot-password.html"
+    },
+    {
+      "src": "/reset-password",
+      "dest": "app_movil/reset-password.html"
+    },
+    {
+      "src": "/verify-otp",
+      "dest": "app_movil/verify-otp.html"
+    },
+    {
       "src": "/explore",
       "dest": "app_movil/explore.html"
     },

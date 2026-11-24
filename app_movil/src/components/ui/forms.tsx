@@ -1,4 +1,4 @@
-import React, { ReactNode, useRef, useState } from 'react';
+import React, { ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   InputAccessoryView,
   Platform,
@@ -12,6 +12,67 @@ import {
 import { colors, fonts, radius, shadows } from './tokens';
 import { EyeIcon, EyeOffIcon, InfoIcon } from './icons';
 import { useKeyboardScroll } from './motion';
+
+const isWeb = Platform.OS === 'web';
+
+function getDomInputElement(node: any): HTMLInputElement | null {
+  if (!isWeb || !node) return null;
+  if (typeof HTMLInputElement !== 'undefined' && node instanceof HTMLInputElement) return node;
+  const nested = node?.querySelector?.('input');
+  return typeof HTMLInputElement !== 'undefined' && nested instanceof HTMLInputElement ? nested : null;
+}
+
+/**
+ * En Safari iOS PWA, aplica atributos DOM estables que React Native Web no expone
+ * (sin regenerar `name` en cada pulsación de tecla ni romper el toggle de contraseña).
+ */
+function useWebInputRef(
+  forwardedRef: React.ForwardedRef<any>,
+  opts: { secure?: boolean; masked?: boolean; fieldId?: string; enterKeyHint?: string }
+) {
+  const internalRef = useRef<any>(null);
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+
+  const refCallback = useCallback(
+    (node: any) => {
+      internalRef.current = node;
+      if (typeof forwardedRef === 'function') forwardedRef(node);
+      else if (forwardedRef) (forwardedRef as any).current = node;
+
+      const el = getDomInputElement(node);
+      if (!el) return;
+
+      el.setAttribute('autocomplete', opts.secure ? 'new-password-off' : 'cc-nope');
+      if (!el.getAttribute('name')) {
+        el.setAttribute('name', `cc_${opts.fieldId || 'field'}_${uid}`);
+      }
+      el.setAttribute('data-cc-field', 'true');
+      el.setAttribute('data-lpignore', 'true');
+      el.setAttribute('data-1p-ignore', 'true');
+      el.setAttribute('data-form-type', 'other');
+      if (opts.secure) {
+        el.type = 'text';
+        el.setAttribute('data-secure', opts.masked ? 'true' : 'false');
+      }
+      if (opts.enterKeyHint) {
+        el.setAttribute('enterkeyhint', opts.enterKeyHint);
+      }
+      el.setAttribute('autocorrect', 'off');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('spellcheck', 'false');
+    },
+    [forwardedRef, opts.secure, opts.masked, opts.fieldId, opts.enterKeyHint, uid]
+  );
+
+  useEffect(() => {
+    const el = getDomInputElement(internalRef.current);
+    if (!el || !opts.secure) return;
+    el.type = 'text';
+    el.setAttribute('data-secure', opts.masked ? 'true' : 'false');
+  }, [opts.secure, opts.masked]);
+
+  return { refCallback, internalRef };
+}
 
 export const EMPTY_ACCESSORY_ID = 'CC_EmptyAccessoryBar';
 export const IOS_EMPTY_ACCESSORY_ID = Platform.OS === 'ios' ? EMPTY_ACCESSORY_ID : undefined;
@@ -35,7 +96,7 @@ export interface NeuInputProps extends TextInputProps {
   rightLabel?: ReactNode;
 }
 
-/** Campo hundido. `error` muestra aro y mensaje de error accesible. Soporta ref para navegación por teclado y suprime barras de accesorios de iOS. */
+/** Campo hundido. `error` muestra aro y mensaje de error accesible. Soporta ref para navegación por teclado. Suprime barras de accesorios de iOS nativo y popups de AutoFill de Safari PWA. */
 export const NeuInput = React.forwardRef<any, NeuInputProps>(
   (
     {
@@ -48,19 +109,38 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
       inputMode,
       autoComplete,
       textContentType,
+      returnKeyType,
       style,
       onFocus,
       onBlur,
       ...props
     },
-    ref
+    forwardedRef
   ) => {
     const [focused, setFocused] = useState(false);
     const [hidden, setHidden] = useState(!!secure);
     const containerRef = useRef<any>(null);
     const kb = useKeyboardScroll();
-    const isWeb = Platform.OS === 'web';
     const shadow = error ? shadows.invalid : focused ? shadows.focus : shadows.inset;
+
+    // Map returnKeyType a enterkeyhint para Web
+    const enterKeyHint =
+      returnKeyType === 'next'
+        ? 'next'
+        : returnKeyType === 'go'
+          ? 'go'
+          : returnKeyType === 'send'
+            ? 'send'
+            : returnKeyType === 'done'
+              ? 'done'
+              : 'done';
+
+    const { refCallback } = useWebInputRef(forwardedRef, {
+      secure,
+      masked: hidden,
+      fieldId: label.replace(/\s+/g, '_').toLowerCase(),
+      enterKeyHint,
+    });
 
     // En Web/Safari iOS: usar inputMode="email" en lugar de type="email" y -webkit-text-security en lugar de type="password"
     // evita que Safari dispare los popups nativos de "contraseña de este sitio" y "¿Usar contraseña segura?".
@@ -80,7 +160,7 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
             {icon}
           </View>
           <TextInput
-            ref={ref as any}
+            ref={refCallback as any}
             accessibilityLabel={label}
             placeholderTextColor={colors.muted}
             autoCapitalize="none"
@@ -90,6 +170,7 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
             {...props}
             keyboardType={resolvedKeyboardType}
             inputMode={resolvedInputMode}
+            returnKeyType={returnKeyType}
             secureTextEntry={isWeb ? false : hidden}
             inputAccessoryViewID={IOS_EMPTY_ACCESSORY_ID}
             autoComplete={autoComplete ?? 'off'}
@@ -191,6 +272,7 @@ export const OtpInput = ({
 }) => {
   const refs = useRef<Array<any>>([]);
   const containerRef = useRef<any>(null);
+  const otpUid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const kb = useKeyboardScroll();
   const [focus, setFocus] = useState<number | null>(null);
   const digits = Array.from({ length }, (_, i) => value[i] ?? '');
@@ -220,6 +302,14 @@ export const OtpInput = ({
           key={i}
           ref={(r) => {
             refs.current[i] = r;
+            const el = getDomInputElement(r);
+            if (el && !el.dataset.ccOtpBound) {
+              el.dataset.ccOtpBound = '1';
+              el.setAttribute('autocomplete', i === 0 ? 'one-time-code' : 'cc-nope');
+              el.setAttribute('name', `cc_otp_${otpUid}_${i}`);
+              el.setAttribute('data-cc-field', 'true');
+              el.setAttribute('enterkeyhint', i === length - 1 ? 'done' : 'next');
+            }
           }}
           value={d}
           onChangeText={(t) => handle(i, t)}
