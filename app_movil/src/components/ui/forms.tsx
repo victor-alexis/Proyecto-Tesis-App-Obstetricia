@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { colors, fonts, radius, shadows } from './tokens';
 import { EyeIcon, EyeOffIcon, InfoIcon } from './icons';
+import { useKeyboardScroll } from './motion';
 
 export interface NeuInputProps extends TextInputProps {
   label: string;
@@ -33,10 +34,12 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
   ) => {
     const [focused, setFocused] = useState(false);
     const [hidden, setHidden] = useState(!!secure);
+    const containerRef = useRef<any>(null);
+    const kb = useKeyboardScroll();
     const shadow = error ? shadows.invalid : focused ? shadows.focus : shadows.inset;
 
     return (
-      <View style={{ gap: 8 }}>
+      <View ref={containerRef as any} style={{ gap: 8 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <Text style={s.label}>{label}</Text>
           {rightLabel}
@@ -54,6 +57,7 @@ export const NeuInput = React.forwardRef<any, NeuInputProps>(
             selectionColor={colors.accent}
             onFocus={(e) => {
               setFocused(true);
+              kb?.scrollToField(containerRef);
               props.onFocus?.(e);
             }}
             onBlur={(e) => {

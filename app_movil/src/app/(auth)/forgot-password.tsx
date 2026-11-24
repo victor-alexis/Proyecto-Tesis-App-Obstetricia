@@ -38,6 +38,7 @@ import {
   SoftBackground,
   At,
   useScreenTimeline,
+  KeyboardScrollContext,
   useKeyboardAwareScroll,
   T_FAST,
   colors,
@@ -47,7 +48,7 @@ import {
 export default function ForgotPasswordScreen() {
   const { sendPasswordResetOtp } = useAuth();
   const t = useScreenTimeline();
-  const { scrollRef, keyboardHeight, scrollToInput } = useKeyboardAwareScroll();
+  const kb = useKeyboardAwareScroll();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -123,35 +124,36 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <View style={styles.root}>
-      <SoftBackground />
+    <KeyboardScrollContext.Provider value={kb}>
+      <View style={styles.root}>
+        <SoftBackground />
 
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoid}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            ref={scrollRef as any}
-            contentContainerStyle={[
-              styles.scrollContent,
-              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 30 },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoid}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
           >
-            {/* ── Barra Superior con Botón Volver ── */}
-            <At t={t} start={T_FAST.topBar} dy={8}>
-              <View style={styles.topBar}>
-                <BackButton onPress={() => router.back()} />
-                <View style={styles.topBarSpacer} />
-              </View>
-            </At>
+            <ScrollView
+              ref={kb.scrollRef as any}
+              contentContainerStyle={[
+                styles.scrollContent,
+                kb.isKeyboardVisible && { paddingBottom: kb.keyboardHeight + 60 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+            >
+              {/* ── Barra Superior con Botón Volver ── */}
+              <At t={t} start={T_FAST.topBar} dy={8}>
+                <View style={styles.topBar}>
+                  <BackButton onPress={() => router.back()} />
+                  <View style={styles.topBarSpacer} />
+                </View>
+              </At>
 
-            {/* ── Contenedor Central con Tarjeta Neumórfica (D3) ── */}
-            <View style={styles.cardWrapper}>
+              {/* ── Contenedor Central con Tarjeta Neumórfica (D3) ── */}
+              <View style={[styles.cardWrapper, kb.isKeyboardVisible && { justifyContent: 'flex-start' }]}>
               <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
                 <NeuCard style={styles.card}>
                   {/* Placa circular con icono de Llave */}
@@ -201,7 +203,6 @@ export default function ForgotPasswordScreen() {
                       autoCorrect={false}
                       autoComplete="email"
                       returnKeyType="send"
-                      onFocus={() => scrollToInput(100)}
                       onSubmitEditing={handleSendCode}
                       error={emailError}
                     />
@@ -238,6 +239,7 @@ export default function ForgotPasswordScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
+    </KeyboardScrollContext.Provider>
   );
 }
 

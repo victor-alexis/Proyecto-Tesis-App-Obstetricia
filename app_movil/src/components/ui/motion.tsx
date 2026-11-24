@@ -1,7 +1,14 @@
 // Animaciones de ClinicalCase: splash + aparición escalonada de campos.
 // Una sola línea de tiempo (segundos) en un shared value; cada elemento deriva su estilo de ella.
 // Requiere react-native-reanimated.
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Keyboard,
   LayoutChangeEvent,
@@ -111,10 +118,24 @@ export function useTimeline(opts: { once?: boolean } = {}) {
 }
 
 /**
+ * Contexto para coordinar el auto-enfoque de inputs con el ScrollView contenedor.
+ */
+export interface KeyboardScrollContextType {
+  scrollRef: React.RefObject<any>;
+  keyboardHeight: number;
+  isKeyboardVisible: boolean;
+  scrollToField: (targetViewRef: any) => void;
+}
+
+export const KeyboardScrollContext = createContext<KeyboardScrollContextType | null>(null);
+
+export const useKeyboardScroll = () => useContext(KeyboardScrollContext);
+
+/**
  * Hook para auto-scroll y adaptación al teclado.
  * Asegura que ningún campo quede tapado al escribir en móviles.
  */
-export function useKeyboardAwareScroll() {
+export function useKeyboardAwareScroll(): KeyboardScrollContextType {
   const scrollRef = useRef<any>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
@@ -138,20 +159,41 @@ export function useKeyboardAwareScroll() {
     };
   }, []);
 
-  const scrollToInput = (yOffset: number) => {
+  const scrollToField = (targetViewRef: any) => {
     setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        y: Math.max(0, yOffset),
-        animated: true,
-      });
-    }, 70);
+      const target = targetViewRef?.current || targetViewRef;
+      if (!target || !scrollRef.current) return;
+
+      if (Platform.OS === 'web' && typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      target.measureLayout?.(
+        scrollRef.current,
+        (_left: number, top: number) => {
+          scrollRef.current?.scrollTo({
+            y: Math.max(0, top - 35),
+            animated: true,
+          });
+        },
+        () => {
+          target.measureInWindow?.((_x: number, y: number) => {
+            scrollRef.current?.scrollTo({
+              y: Math.max(0, y - 80),
+              animated: true,
+            });
+          });
+        }
+      );
+    }, 110);
   };
 
   return {
     scrollRef,
     keyboardHeight,
     isKeyboardVisible: keyboardHeight > 0,
-    scrollToInput,
+    scrollToField,
   };
 }
 

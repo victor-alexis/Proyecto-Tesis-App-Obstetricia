@@ -4,6 +4,32 @@ Este archivo registra de forma cronológica todos los cambios técnicos, decisio
 
 ---
 
+### [2026-11-23] - Rediseño Neumórfico Integral de Autenticación, Motor de Animaciones neu-motion y Auto-Enfoque de Teclado
+* **Responsable:** Víctor Alexis & Asistente IA
+* **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX) / Fase 3 (Seguridad)
+
+#### ¿Qué se hizo?
+1. **Rediseño Neumórfico de Alta Gama (Bodoni Moda + DM Sans):**
+   - Estandarización de pantallas D1/D1.2 (`login.tsx`), D2 (`register.tsx`), D3/D3.2/D3.3 (`forgot-password.tsx`, `reset-password.tsx`) y D4/D4.2 (`verify-otp.tsx`).
+   - Centralización del sistema de diseño en `src/components/ui/` (`tokens.ts`, `icons.tsx`, `typography.tsx`, `buttons.tsx`, `forms.tsx`, `cards.tsx`, `feedback.tsx`, `motion.tsx`, `index.ts`).
+2. **Motor de Movimiento e Integración de `neu-motion`:**
+   - Creado `motion.tsx` con línea de tiempo compartida a 60 fps (`useTimeline`, `T`), fondo perlado animado (`SoftBackground`), isotipo de marca auto-medido (`AnimatedWordmark`) y transiciones escalonadas (`At`).
+   - Creado `useScreenTimeline` y `T_FAST` para animaciones ágiles (~0.7s) en las pantallas secundarias de navegación.
+   - Eliminada la antigua pantalla de carga intermedia `AppLoadingScreen`, delegando el inicio sin parpadeos a `SplashScreen.preventAutoHideAsync()` de Expo.
+3. **Consistencia de Seguridad y Validación de Contraseñas:**
+   - Incorporados `StrengthMeter` y los requisitos en tiempo real (`Requirement` para 8+ caracteres, mayúscula y número) en `register.tsx`, unificando la regla con `reset-password.tsx`.
+   - Incorporados guardianes de ruta en `reset-password.tsx` (requiere sesión y flag `isRecovering`) y `verify-otp.tsx` (requiere parámetro `email`).
+   - Cierre automático de otras sesiones concurrentes en Supabase al cambiar contraseña (`signOut({ scope: 'others' })`).
+4. **Visibilidad Total y Auto-Enfoque Dinámico ante Apertura del Teclado:**
+   - Creado `KeyboardScrollContext` y `useKeyboardAwareScroll` en `motion.tsx`.
+   - Modificado `NeuInput` en `forms.tsx` con `React.forwardRef` y auto-scroll inteligente mediante `measureLayout` relativo al `ScrollView` padre.
+   - Eliminado el conflicto de doble padding de `automaticallyAdjustKeyboardInsets` y ajustado el alineamiento (`justifyContent: 'flex-start'`) ante teclado activo, garantizando que el campo enfocado y las herramientas/sugerencias de iOS se posicionen limpiamente en el tercio superior de la pantalla.
+5. **Verificación:**
+   - 0 errores de tipado con `npx tsc --noEmit`.
+   - 20/20 comprobaciones superadas en `npx expo-doctor`.
+
+---
+
 ### [2026-11-20] - Blindaje Absoluto Anti-Zoom y Fijación de Pantalla sin +html.tsx
 * **Responsable:** Víctor Alexis & Asistente IA
 * **Fase:** Fase 2 (Frontend Móvil & Calidad UI/UX)

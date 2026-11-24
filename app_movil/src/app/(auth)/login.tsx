@@ -41,6 +41,7 @@ import {
   At,
   T,
   useTimeline,
+  KeyboardScrollContext,
   useKeyboardAwareScroll,
   colors,
   fonts,
@@ -53,7 +54,7 @@ export default function LoginScreen() {
   const { signInWithGoogle, signInWithPassword, session, isRecovering } = useAuth();
   const pathname = usePathname();
   const t = useTimeline({ once: true }); // Animación completa solo la primera vez por sesión
-  const { scrollRef, keyboardHeight, scrollToInput } = useKeyboardAwareScroll();
+  const kb = useKeyboardAwareScroll();
   const passwordInputRef = useRef<any>(null);
 
   const [email, setEmail] = useState('');
@@ -246,27 +247,28 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.root}>
-      {/* Fondo suave perlado con olas sutiles */}
-      <SoftBackground />
+    <KeyboardScrollContext.Provider value={kb}>
+      <View style={styles.root}>
+        {/* Fondo suave perlado con olas sutiles */}
+        <SoftBackground />
 
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoid}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            ref={scrollRef as any}
-            contentContainerStyle={[
-              styles.scrollContent,
-              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 30 },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoid}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
           >
-            <View style={[styles.contentWrap, keyboardHeight > 0 && { justifyContent: 'flex-start' }]}>
+            <ScrollView
+              ref={kb.scrollRef as any}
+              contentContainerStyle={[
+                styles.scrollContent,
+                kb.isKeyboardVisible && { paddingBottom: kb.keyboardHeight + 60 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+            >
+              <View style={[styles.contentWrap, kb.isKeyboardVisible && { justifyContent: 'flex-start' }]}>
               {/* ── Encabezado de Marca Animado (Wordmark letra a letra + Subtítulo) ── */}
               <AnimatedWordmark t={t} size={55} />
 
@@ -341,7 +343,6 @@ export default function LoginScreen() {
                         autoCorrect={false}
                         autoComplete="email"
                         returnKeyType="next"
-                        onFocus={() => scrollToInput(120)}
                         onSubmitEditing={() => passwordInputRef.current?.focus()}
                       />
                     </At>
@@ -364,7 +365,6 @@ export default function LoginScreen() {
                         }}
                         autoComplete="current-password"
                         returnKeyType="go"
-                        onFocus={() => scrollToInput(220)}
                         onSubmitEditing={handleEmailLogin}
                         rightLabel={
                           <NeuLink
@@ -410,6 +410,7 @@ export default function LoginScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
+    </KeyboardScrollContext.Provider>
   );
 }
 

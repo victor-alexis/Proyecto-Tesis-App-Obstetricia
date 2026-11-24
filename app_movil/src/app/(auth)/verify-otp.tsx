@@ -39,6 +39,7 @@ import {
   SoftBackground,
   At,
   useScreenTimeline,
+  KeyboardScrollContext,
   useKeyboardAwareScroll,
   T_FAST,
   colors,
@@ -54,7 +55,7 @@ export default function VerifyOtpScreen() {
   const type = params.type === 'recovery' ? 'recovery' : 'signup';
   const isRecovery = type === 'recovery';
   const t = useScreenTimeline();
-  const { scrollRef, keyboardHeight } = useKeyboardAwareScroll();
+  const kb = useKeyboardAwareScroll();
 
   const {
     verifySignupOtp,
@@ -217,35 +218,36 @@ export default function VerifyOtpScreen() {
   };
 
   return (
-    <View style={styles.root}>
-      <SoftBackground />
+    <KeyboardScrollContext.Provider value={kb}>
+      <View style={styles.root}>
+        <SoftBackground />
 
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoid}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            ref={scrollRef as any}
-            contentContainerStyle={[
-              styles.scrollContent,
-              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 30 },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoid}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
           >
-            {/* ── Barra Superior con Botón Volver ── */}
-            <At t={t} start={T_FAST.topBar} dy={8}>
-              <View style={styles.topBar}>
-                <BackButton onPress={() => router.back()} />
-                <View style={styles.topBarSpacer} />
-              </View>
-            </At>
+            <ScrollView
+              ref={kb.scrollRef as any}
+              contentContainerStyle={[
+                styles.scrollContent,
+                kb.isKeyboardVisible && { paddingBottom: kb.keyboardHeight + 60 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+            >
+              {/* ── Barra Superior con Botón Volver ── */}
+              <At t={t} start={T_FAST.topBar} dy={8}>
+                <View style={styles.topBar}>
+                  <BackButton onPress={() => router.back()} />
+                  <View style={styles.topBarSpacer} />
+                </View>
+              </At>
 
-            {/* ── Tarjeta Neumórfica Central (D4 / D4.2) ── */}
-            <View style={styles.cardWrapper}>
+              {/* ── Tarjeta Neumórfica Central (D4 / D4.2) ── */}
+              <View style={[styles.cardWrapper, kb.isKeyboardVisible && { justifyContent: 'flex-start' }]}>
               <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
                 <NeuCard style={styles.card}>
                   {/* Placa con escudo: insignia accent en estado normal, error en D4.2 */}
@@ -345,6 +347,7 @@ export default function VerifyOtpScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
+    </KeyboardScrollContext.Provider>
   );
 }
 

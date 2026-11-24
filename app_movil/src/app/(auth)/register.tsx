@@ -44,6 +44,7 @@ import {
   SoftBackground,
   At,
   useScreenTimeline,
+  KeyboardScrollContext,
   useKeyboardAwareScroll,
   T_FAST,
   colors,
@@ -53,7 +54,7 @@ import {
 export default function RegisterScreen() {
   const { signUpWithEmail, signInWithGoogle } = useAuth();
   const t = useScreenTimeline();
-  const { scrollRef, keyboardHeight, scrollToInput } = useKeyboardAwareScroll();
+  const kb = useKeyboardAwareScroll();
   const emailInputRef = useRef<any>(null);
   const passwordInputRef = useRef<any>(null);
 
@@ -258,26 +259,27 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={styles.root}>
-      <SoftBackground />
+    <KeyboardScrollContext.Provider value={kb}>
+      <View style={styles.root}>
+        <SoftBackground />
 
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoid}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            ref={scrollRef as any}
-            contentContainerStyle={[
-              styles.scrollContent,
-              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 40 },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoid}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
           >
-            <View style={styles.topWrap}>
+            <ScrollView
+              ref={kb.scrollRef as any}
+              contentContainerStyle={[
+                styles.scrollContent,
+                kb.isKeyboardVisible && { paddingBottom: kb.keyboardHeight + 60 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+            >
+              <View style={[styles.topWrap, kb.isKeyboardVisible && { gap: 10 }]}>
               {/* ── Barra Superior con Botón Volver ── */}
               <At t={t} start={T_FAST.topBar} dy={8}>
                 <View style={styles.topBar}>
@@ -340,7 +342,6 @@ export default function RegisterScreen() {
                         autoCapitalize="words"
                         autoComplete="name"
                         returnKeyType="next"
-                        onFocus={() => scrollToInput(120)}
                         onSubmitEditing={() => emailInputRef.current?.focus()}
                         error={nameError}
                       />
@@ -363,7 +364,6 @@ export default function RegisterScreen() {
                         autoCorrect={false}
                         autoComplete="email"
                         returnKeyType="next"
-                        onFocus={() => scrollToInput(200)}
                         onSubmitEditing={() => passwordInputRef.current?.focus()}
                         error={emailError}
                       />
@@ -384,7 +384,6 @@ export default function RegisterScreen() {
                         }}
                         autoComplete="new-password"
                         returnKeyType="done"
-                        onFocus={() => scrollToInput(300)}
                         onSubmitEditing={handleRegister}
                         error={passwordError}
                       />
@@ -452,6 +451,7 @@ export default function RegisterScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
+    </KeyboardScrollContext.Provider>
   );
 }
 

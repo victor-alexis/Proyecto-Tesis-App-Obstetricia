@@ -1,7 +1,7 @@
 # Fases del Proyecto de Tesis: App Obstetricia
 
-> **Estado General:** `Fase 2 Completada con éxito (Cloud + Auth) -> Iniciando Fase 3: Persistencia, Modelado Clínico y Privacidad`  
-> **Última actualización:** 2026-11-15  
+> **Estado General:** `Fase 2 Completada con éxito (Cloud + Auth Neumórfico D1-D4 + Animaciones) -> Iniciando Fase 3: Persistencia, Modelado Clínico y Privacidad`  
+> **Última actualización:** 2026-11-23  
 > **Autores:** Equipo de Tesis (Víctor Alexis & Compañero)
 
 ---

@@ -44,6 +44,7 @@ import {
   SoftBackground,
   At,
   useScreenTimeline,
+  KeyboardScrollContext,
   useKeyboardAwareScroll,
   T_FAST,
   colors,
@@ -53,7 +54,7 @@ import {
 export default function ResetPasswordScreen() {
   const { updatePassword, signOut, session, isRecovering } = useAuth();
   const t = useScreenTimeline();
-  const { scrollRef, keyboardHeight, scrollToInput } = useKeyboardAwareScroll();
+  const kb = useKeyboardAwareScroll();
   const confirmInputRef = useRef<any>(null);
 
   // Guardián estricto de seguridad clínica:
@@ -258,35 +259,36 @@ export default function ResetPasswordScreen() {
   // PANTALLA D3.2: Formulario Nueva Contraseña
   // ──────────────────────────────────────────────
   return (
-    <View style={styles.root}>
-      <SoftBackground />
+    <KeyboardScrollContext.Provider value={kb}>
+      <View style={styles.root}>
+        <SoftBackground />
 
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoid}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            ref={scrollRef as any}
-            contentContainerStyle={[
-              styles.scrollContent,
-              keyboardHeight > 0 && { paddingBottom: keyboardHeight + 40 },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+            style={styles.keyboardAvoid}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
           >
-            {/* Barra Superior */}
-            <At t={t} start={T_FAST.topBar} dy={8}>
-              <View style={styles.topBar}>
-                <BackButton onPress={() => router.back()} />
-                <View style={styles.topBarSpacer} />
-              </View>
-            </At>
+            <ScrollView
+              ref={kb.scrollRef as any}
+              contentContainerStyle={[
+                styles.scrollContent,
+                kb.isKeyboardVisible && { paddingBottom: kb.keyboardHeight + 60 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+            >
+              {/* Barra Superior */}
+              <At t={t} start={T_FAST.topBar} dy={8}>
+                <View style={styles.topBar}>
+                  <BackButton onPress={() => router.back()} />
+                  <View style={styles.topBarSpacer} />
+                </View>
+              </At>
 
-            {/* Tarjeta Neumórfica (D3.2) */}
-            <View style={styles.cardWrapper}>
+              {/* Tarjeta Neumórfica (D3.2) */}
+              <View style={[styles.cardWrapper, kb.isKeyboardVisible && { justifyContent: 'flex-start' }]}>
               <At t={t} start={T_FAST.card} dur={0.45} dy={24}>
                 <NeuCard style={styles.cardForm}>
                   <At t={t} start={T_FAST.header}>
@@ -325,7 +327,6 @@ export default function ResetPasswordScreen() {
                         }}
                         autoComplete="new-password"
                         returnKeyType="next"
-                        onFocus={() => scrollToInput(120)}
                         onSubmitEditing={() => confirmInputRef.current?.focus()}
                         error={passwordError}
                       />
@@ -345,7 +346,6 @@ export default function ResetPasswordScreen() {
                         }}
                         autoComplete="new-password"
                         returnKeyType="done"
-                        onFocus={() => scrollToInput(200)}
                         onSubmitEditing={handleSavePassword}
                         error={confirmError}
                       />
@@ -385,6 +385,7 @@ export default function ResetPasswordScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
+    </KeyboardScrollContext.Provider>
   );
 }
 
