@@ -2,7 +2,8 @@
  * login.tsx
  * Pantalla Principal de Inicio de Sesión de ClinicalCase (Módulo D1).
  * Diseño neumórfico con Bodoni Moda + DM Sans.
- * Construido exclusivamente con tokens y componentes de `@/ui/Neu`.
+ * Construido exclusivamente con tokens y componentes de `@/components/ui`.
+ * Animaciones fluidas de inicio (Splash + entrada escalonada) con Reanimated.
  * Estados: Normal, Error de Credenciales (D1.2), Cargando, Bloqueo Temporal.
  */
 
@@ -22,7 +23,6 @@ import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
 import { isValidEmail } from '@/utils/authErrors';
 import {
-  Wordmark,
   AccentBar,
   Heading,
   Subtitle,
@@ -36,6 +36,11 @@ import {
   SecureFooter,
   MailIcon,
   LockIcon,
+  SoftBackground,
+  AnimatedWordmark,
+  At,
+  T,
+  useTimeline,
   colors,
   fonts,
 } from '@/components/ui';
@@ -46,6 +51,7 @@ const BLOCK_DURATION_SECONDS = 60;
 export default function LoginScreen() {
   const { signInWithGoogle, signInWithPassword, session } = useAuth();
   const pathname = usePathname();
+  const t = useTimeline({ once: true }); // Animación completa solo la primera vez por sesión
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -98,23 +104,22 @@ export default function LoginScreen() {
     if (isBlocked) return;
     setErrorBanner(null);
     setIsCredentialError(false);
-    setLoading(true);
+
     try {
+      setLoading(true);
       const result = await signInWithGoogle();
       if (!result.success && result.error) {
         triggerHaptic(Haptics.NotificationFeedbackType.Error);
         setErrorBanner({
-          title: 'Error de autenticación',
+          title: 'Error con Google',
           text: result.error,
         });
-      } else {
-        triggerHaptic(Haptics.NotificationFeedbackType.Success);
       }
     } catch (err: any) {
       triggerHaptic(Haptics.NotificationFeedbackType.Error);
       setErrorBanner({
-        title: 'Error con Google',
-        text: err?.message || 'No fue posible completar el inicio de sesión.',
+        title: 'Error inesperado',
+        text: err?.message || 'No se pudo completar el inicio de sesión con Google.',
       });
     } finally {
       setLoading(false);
@@ -124,79 +129,77 @@ export default function LoginScreen() {
   const handleEmailLogin = async () => {
     if (isBlocked) return;
 
-    const trimmedEmail = email.trim();
-
-    if (!trimmedEmail || !password) {
+    // Validación preliminar de correo
+    if (!email.trim()) {
       triggerHaptic(Haptics.NotificationFeedbackType.Warning);
       setErrorBanner({
-        title: 'Datos incompletos',
-        text: 'Por favor ingresa tu correo electrónico y tu contraseña.',
+        title: 'Correo requerido',
+        text: 'Por favor ingresa tu correo institucional o personal.',
       });
       return;
     }
 
-    if (!isValidEmail(trimmedEmail)) {
+    if (!isValidEmail(email)) {
       triggerHaptic(Haptics.NotificationFeedbackType.Warning);
       setErrorBanner({
-        title: 'Formato inválido',
-        text: 'Por favor ingresa un correo electrónico institucional o personal válido.',
+        title: 'Formato de correo no válido',
+        text: 'Ingresa una dirección de correo válida (ejemplo: usuario@ulagos.cl).',
       });
       return;
     }
 
-    setLoading(true);
+    if (!password) {
+      triggerHaptic(Haptics.NotificationFeedbackType.Warning);
+      setErrorBanner({
+        title: 'Contraseña requerida',
+        text: 'Por favor ingresa tu contraseña.',
+      });
+      return;
+    }
 
     try {
-      const result = await signInWithPassword(trimmedEmail, password);
+      setLoading(true);
+      setErrorBanner(null);
+
+      const result = await signInWithPassword(email.trim(), password);
 
       if (result.success) {
         triggerHaptic(Haptics.NotificationFeedbackType.Success);
-        setErrorBanner(null);
-        setIsCredentialError(false);
-        setAttemptsLeft(MAX_ATTEMPTS);
+        // Redirección manejada por AuthContext o useEffect
         router.replace('/');
         return;
       }
 
-      // Si el correo no ha sido verificado, redirigir a verificación OTP (D4)
-      if (result.isEmailNotConfirmed) {
-        triggerHaptic(Haptics.NotificationFeedbackType.Warning);
-        router.push({
-          pathname: '/verify-otp',
-          params: {
-            email: trimmedEmail,
-            type: 'signup',
-          },
-        } as any);
-        return;
-      }
-
+      // Manejo específico de errores devueltos
       triggerHaptic(Haptics.NotificationFeedbackType.Error);
 
-      const errLower = (result.error || '').toLowerCase();
-      const isCredFail =
-        errLower.includes('correo o contraseña') ||
-        errLower.includes('invalid login credentials') ||
-        errLower.includes('invalid_credentials') ||
-        errLower.includes('credenciales');
-
-      const isRateLimit =
-        errLower.includes('rate limit') ||
-        errLower.includes('demasiadas solicitudes') ||
-        errLower.includes('over_request_rate_limit');
-
-      if (isRateLimit) {
-        setIsBlocked(true);
-        setBlockCountdown(BLOCK_DURATION_SECONDS);
-        setErrorBanner({
-          title: 'Acceso bloqueado temporalmente',
-          text: `Demasiadas solicitudes. Por seguridad, espera ${BLOCK_DURATION_SECONDS} segundos antes de volver a intentar.`,
+      if (result.isEmailNotConfirmed) {
+        // Redirigir a verificación OTP (Pantalla D4)
+        router.push({
+          pathname: '/verify-otp',
+          params: { email: email.trim(), returnTo: '/login' },
         });
         return;
       }
 
-      if (isCredFail) {
+      const errText = result.error || '';
+      const isRateLimit = errText.toLowerCase().includes('demasiadas solicitudes');
+      const isInvalidCredentials =
+        errText.toLowerCase().includes('correo o contraseña incorrectos') ||
+        errText.toLowerCase().includes('credenciales');
+
+      if (isRateLimit) {
+        setErrorBanner({
+          title: 'Demasiadas solicitudes',
+          text: 'Has superado el límite de intentos permitidos por el servidor. Por favor espera unos minutos antes de volver a intentar.',
+        });
+        return;
+      }
+
+      if (isInvalidCredentials) {
+        // Estado D1.2: Error de credenciales y contador de intentos
         const remaining = attemptsLeft - 1;
+
         if (remaining <= 0) {
           setIsBlocked(true);
           setBlockCountdown(BLOCK_DURATION_SECONDS);
@@ -240,154 +243,167 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+    <View style={styles.root}>
+      {/* Fondo suave perlado con olas sutiles */}
+      <SoftBackground />
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={styles.contentWrap}>
-            {/* ── Encabezado de Marca (Wordmark + Subtítulo) ── */}
-            <View style={styles.brandContainer}>
-              <Wordmark size={55} />
-              <Text style={styles.brandSubtitle}>
-                Sistema de Soporte a la Decisión Clínica y Seguimiento Perinatal
-              </Text>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.contentWrap}>
+              {/* ── Encabezado de Marca Animado (Wordmark letra a letra + Subtítulo) ── */}
+              <AnimatedWordmark t={t} size={55} />
+
+              {/* ── Tarjeta Neumórfica (D1 / D1.2) con entrada animada ── */}
+              <At t={t} start={T.card} dur={1} dy={70}>
+                <NeuCard style={styles.cardContainer}>
+                  {/* Barra de acento */}
+                  <At t={t} start={T.bar}>
+                    <AccentBar />
+                  </At>
+
+                  {/* Título: Bienvenido/a */}
+                  <At t={t} start={T.title}>
+                    <Heading accent="/a">Bienvenido</Heading>
+                  </At>
+
+                  <At t={t} start={T.sub} style={styles.cardSubtitleWrap}>
+                    <Subtitle>
+                      Accede a las herramientas perinatales y a los módulos clínicos.
+                    </Subtitle>
+                  </At>
+
+                  {/* Banner de error / aviso (D1.2 o bloqueo) */}
+                  {errorBanner && (
+                    <View style={styles.bannerWrap}>
+                      <ErrorBanner
+                        title={errorBanner.title}
+                        text={
+                          isBlocked && blockCountdown > 0
+                            ? `${errorBanner.text} (${blockCountdown}s restantes)`
+                            : errorBanner.text
+                        }
+                      />
+                    </View>
+                  )}
+
+                  {/* Botón de Google y Separador (Solo visible en estado normal sin error de credenciales) */}
+                  {!isCredentialError && (
+                    <>
+                      <At t={t} start={T.google} style={styles.googleWrap}>
+                        <GoogleButton
+                          onPress={handleGoogleLogin}
+                          title="Continuar con Google"
+                        />
+                      </At>
+
+                      <At t={t} start={T.divider} style={styles.dividerWrap}>
+                        <OrDivider text="o con tu correo" />
+                      </At>
+                    </>
+                  )}
+
+                  {/* Campos de Entrada con aparición escalonada */}
+                  <View
+                    style={[
+                      styles.formWrap,
+                      isCredentialError ? styles.formWrapError : styles.formWrapNormal,
+                    ]}
+                  >
+                    <At t={t} start={T.email}>
+                      <NeuInput
+                        label="Correo institucional o personal"
+                        icon={<MailIcon />}
+                        placeholder="nombre@ulagos.cl"
+                        value={email}
+                        onChangeText={(val) => {
+                          setEmail(val);
+                          clearCredentialError();
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="email"
+                      />
+                    </At>
+
+                    <At t={t} start={T.pass}>
+                      <NeuInput
+                        label="Contraseña"
+                        icon={
+                          <LockIcon
+                            color={isCredentialError ? colors.errorDark : colors.muted}
+                          />
+                        }
+                        placeholder="Tu contraseña"
+                        secure
+                        value={password}
+                        onChangeText={(val) => {
+                          setPassword(val);
+                          clearCredentialError();
+                        }}
+                        autoComplete="current-password"
+                        rightLabel={
+                          <NeuLink
+                            italic
+                            onPress={() => router.push('/forgot-password')}
+                          >
+                            ¿Olvidaste tu contraseña?
+                          </NeuLink>
+                        }
+                        error={isCredentialError ? 'Contraseña incorrecta' : undefined}
+                      />
+                    </At>
+                  </View>
+
+                  {/* Botón Principal de Inicio de Sesión */}
+                  <At t={t} start={T.button} style={styles.submitWrap}>
+                    <NeuButton
+                      title={isBlocked ? `Bloqueado (${blockCountdown}s)` : 'Iniciar sesión'}
+                      onPress={handleEmailLogin}
+                      loading={loading}
+                      disabled={isBlocked || loading}
+                    />
+                  </At>
+
+                  {/* Enlace Crear una Cuenta (Flujo D2) */}
+                  <At t={t} start={T.signup} dy={10} style={styles.footerLinkWrap}>
+                    <Text style={styles.footerLinkText}>
+                      ¿No tienes una cuenta?{' '}
+                      <NeuLink onPress={() => router.push('/register')}>
+                        Crear una cuenta
+                      </NeuLink>
+                    </Text>
+                  </At>
+                </NeuCard>
+              </At>
             </View>
 
-            {/* ── Tarjeta Neumórfica (D1 / D1.2) ── */}
-            <NeuCard style={styles.cardContainer}>
-              {/* Barra de acento */}
-              <AccentBar />
-
-              {/* Título: Bienvenido/a */}
-              <Heading accent="/a">Bienvenido</Heading>
-
-              <View style={styles.cardSubtitleWrap}>
-                <Subtitle>
-                  Accede a las herramientas perinatales y a los módulos clínicos.
-                </Subtitle>
-              </View>
-
-              {/* Banner de error / aviso (D1.2 o bloqueo) */}
-              {errorBanner && (
-                <View style={styles.bannerWrap}>
-                  <ErrorBanner
-                    title={errorBanner.title}
-                    text={
-                      isBlocked && blockCountdown > 0
-                        ? `${errorBanner.text} (${blockCountdown}s restantes)`
-                        : errorBanner.text
-                    }
-                  />
-                </View>
-              )}
-
-              {/* Botón de Google y Separador (Solo visible en estado normal sin error de credenciales) */}
-              {!isCredentialError && (
-                <>
-                  <View style={styles.googleWrap}>
-                    <GoogleButton
-                      onPress={handleGoogleLogin}
-                      title="Continuar con Google"
-                    />
-                  </View>
-
-                  <View style={styles.dividerWrap}>
-                    <OrDivider text="o con tu correo" />
-                  </View>
-                </>
-              )}
-
-              {/* Campos de Entrada */}
-              <View
-                style={[
-                  styles.formWrap,
-                  isCredentialError ? styles.formWrapError : styles.formWrapNormal,
-                ]}
-              >
-                <NeuInput
-                  label="Correo institucional o personal"
-                  icon={<MailIcon />}
-                  placeholder="nombre@ulagos.cl"
-                  value={email}
-                  onChangeText={(val) => {
-                    setEmail(val);
-                    clearCredentialError();
-                  }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="email"
-                />
-
-                <NeuInput
-                  label="Contraseña"
-                  icon={
-                    <LockIcon
-                      color={isCredentialError ? colors.errorDark : colors.muted}
-                    />
-                  }
-                  placeholder="Tu contraseña"
-                  secure
-                  value={password}
-                  onChangeText={(val) => {
-                    setPassword(val);
-                    clearCredentialError();
-                  }}
-                  autoComplete="current-password"
-                  rightLabel={
-                    <NeuLink
-                      italic
-                      onPress={() => router.push('/forgot-password')}
-                    >
-                      ¿Olvidaste tu contraseña?
-                    </NeuLink>
-                  }
-                  error={isCredentialError ? 'Contraseña incorrecta' : undefined}
-                />
-              </View>
-
-              {/* Botón Principal de Inicio de Sesión */}
-              <View style={styles.submitWrap}>
-                <NeuButton
-                  title={isBlocked ? `Bloqueado (${blockCountdown}s)` : 'Iniciar sesión'}
-                  onPress={handleEmailLogin}
-                  loading={loading}
-                  disabled={isBlocked || loading}
-                />
-              </View>
-
-              {/* Enlace Crear una Cuenta (Flujo D2) */}
-              <View style={styles.footerLinkWrap}>
-                <Text style={styles.footerLinkText}>
-                  ¿No tienes una cuenta?{' '}
-                  <NeuLink onPress={() => router.push('/register')}>
-                    Crear una cuenta
-                  </NeuLink>
-                </Text>
-              </View>
-            </NeuCard>
-          </View>
-
-          {/* ── Pie de Página Cifrado y Seguro ── */}
-          <View style={styles.footerWrap}>
-            <SecureFooter />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            {/* ── Pie de Página Cifrado y Seguro ── */}
+            <At t={t} start={T.footer} dy={8} style={styles.footerWrap}>
+              <SecureFooter />
+            </At>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardAvoid: {
     flex: 1,
@@ -407,18 +423,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 26,
     paddingVertical: 10,
-  },
-  brandContainer: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  brandSubtitle: {
-    fontFamily: fonts.body,
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.muted,
-    textAlign: 'center',
-    maxWidth: 270,
   },
   cardContainer: {
     width: '100%',

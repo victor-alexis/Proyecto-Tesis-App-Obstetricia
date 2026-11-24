@@ -8,3 +8,6 @@ export * from './buttons';
 export * from './forms';
 export * from './cards';
 export * from './feedback';
+
+// Motion & Shared Timelines
+export * from './motion';
